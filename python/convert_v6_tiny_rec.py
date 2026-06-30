@@ -31,8 +31,12 @@ print('--> Config model')
 rknn.config(target_platform=platform)
 print('done')
 
-print('--> Loading model')
-ret = rknn.load_onnx(model=model_path)
+print('--> Loading model (fixing input to 1x3x48x320)')
+ret = rknn.load_onnx(
+    model=model_path,
+    inputs=['x'],
+    input_size_list=[[1, 3, 48, 320]]
+)
 if ret != 0:
     print('Load model failed!')
     sys.exit(ret)
