@@ -1,0 +1,19 @@
+__pycache__/
+*.pyc
+*.pyo
+
+# Benchmark output directories
+annotated/
+crops/
+
+# Local test images (add your own, don't commit sensitive data)
+python/test_images/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Large binary model files — track with Git LFS or download separately
+# Uncomment these if you do NOT want to commit them directly:
+# model/*.onnx
+# model/*.rknn
