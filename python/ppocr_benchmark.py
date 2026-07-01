@@ -9,7 +9,7 @@ Usage:
 
 Key env vars: PPOCR_CHAR_DICT, PPOCR_DET_THRESH, PPOCR_BOX_THRESH,
               PPOCR_UNCLIP_RATIO, PPOCR_DROP_SCORE, PPOCR_MIN_HEIGHT,
-              PPOCR_MIN_WIDTH
+              PPOCR_MIN_WIDTH, PPOCR_BINARIZE
 """
 
 import os
@@ -23,6 +23,13 @@ import numpy as np
 _this_dir = os.path.dirname(os.path.abspath(__file__))
 if _this_dir not in sys.path:
     sys.path.insert(0, _this_dir)
+
+import ppocr_det as predict_det
+import ppocr_rec as predict_rec
+from ppocr_system import (
+    _run_det_tiled, _nms_boxes, _box_size_ok,
+    get_rotate_crop_image, sorted_boxes, preprocess_image,
+)
 
 
 # ── /proc helpers (no psutil needed) ─────────────────────────────────────────
@@ -70,91 +77,13 @@ def save_crops(crops, rec_results, crops_dir):
     print('  Crops saved : {0}/  ({1} files)'.format(crops_dir, len(crops)))
 
 
-def _run_det_tiled(img_det, detector, overlap=256):
-    """Hybrid det: run squash (full image) + two tiles, merge all boxes, NMS deduplicates."""
-    h, w = img_det.shape[:2]
-
-    if w <= h * 1.5:
-        return detector.run(img_det)
-
-    # 1. Full-image squash — captures status bar reliably.
-    boxes_squash = detector.run(img_det)
-
-    # 2. Two tiles — captures right-side labels reliably.
-    tile_w   = w // 2 + overlap // 2
-    offset2  = w - tile_w
-
-    tile1 = img_det[:, :tile_w]
-    tile2 = img_det[:, offset2:]
-
-    boxes1 = detector.run(tile1)
-    boxes2 = detector.run(tile2)
-
-    # Shift tile2 boxes back to full-image coords.
-    boxes2_shifted = []
-    if boxes2 is not None and len(boxes2):
-        for b in boxes2:
-            b2 = b.copy(); b2[:, 0] += offset2
-            boxes2_shifted.append(b2)
-
-    all_boxes = []
-    if boxes_squash is not None and len(boxes_squash):
-        all_boxes.extend(list(boxes_squash))
-    if boxes1 is not None and len(boxes1):
-        all_boxes.extend(list(boxes1))
-    all_boxes.extend(boxes2_shifted)
-
-    return np.array(all_boxes) if all_boxes else None
-
-
-def _nms_boxes(boxes, iom_threshold=0.6):
-    """
-    Suppress duplicate/nested boxes using Intersection-over-Min-Area (IoM).
-    Standard IoU NMS misses containment cases (small box inside large box).
-    IoM = intersection_area / min(area_i, area_j) — fires when a small box
-    is largely swallowed by a larger one. The smaller box is suppressed.
-    """
-    if len(boxes) <= 1:
-        return boxes
-
-    areas = [cv2.contourArea(b.astype(np.float32)) for b in boxes]
-    # Process largest boxes first so they are kept over smaller duplicates
-    order = sorted(range(len(boxes)), key=lambda i: areas[i], reverse=True)
-    suppressed = set()
-    keep = []
-
-    for i in order:
-        if i in suppressed:
-            continue
-        keep.append(i)
-        for j in order:
-            if j == i or j in suppressed:
-                continue
-            inter_area, _ = cv2.intersectConvexConvex(
-                boxes[i].astype(np.float32),
-                boxes[j].astype(np.float32)
-            )
-            iom = inter_area / (min(areas[i], areas[j]) + 1e-6)
-            if iom > iom_threshold:
-                suppressed.add(j)
-
-    return [boxes[i] for i in sorted(keep)]
-
-
-def _box_size_ok(b, min_h, min_w):
-    """Return True if box is large enough to contain real text (scaled coords)."""
-    return (np.linalg.norm(b[0] - b[3]) >= min_h and
-            np.linalg.norm(b[0] - b[1]) >= min_w)
-
-
 def run_once(img_orig, detector, recogniser, input_scale, drop_score, cycles,
              save_crops_dir=None):
-    from ppocr_system import get_rotate_crop_image, sorted_boxes
 
-    # Box size thresholds in scaled-image pixels.
-    # Env vars are in original-image pixels; multiply by input_scale to get scaled pixels.
-    _min_h = float(os.environ.get('PPOCR_MIN_HEIGHT', '10')) * input_scale
-    _min_w = float(os.environ.get('PPOCR_MIN_WIDTH',  '8'))  * input_scale
+    # Compute constants once before the timing loop.
+    _min_h   = float(os.environ.get('PPOCR_MIN_HEIGHT', '10')) * input_scale
+    _min_w   = float(os.environ.get('PPOCR_MIN_WIDTH',  '8'))  * input_scale
+    binarize = os.environ.get('PPOCR_BINARIZE', '1') != '0'
 
     times_ms = []
     cpu_pcts = []
@@ -169,16 +98,7 @@ def run_once(img_orig, detector, recogniser, input_scale, drop_score, cycles,
         sys0 = read_system_cpu_total()
         wall_start = time.time()
 
-        # Preprocessing: grayscale → Otsu binarization → BGR.
-        gray = cv2.cvtColor(img_orig, cv2.COLOR_BGR2GRAY)
-        _, gray_bin = cv2.threshold(gray, 0, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU)
-        img_det = cv2.cvtColor(gray_bin, cv2.COLOR_GRAY2BGR)
-
-        if input_scale != 1.0:
-            h, w = img_det.shape[:2]
-            img_det = cv2.resize(img_det,
-                                 (int(w * input_scale), int(h * input_scale)),
-                                 interpolation=cv2.INTER_LANCZOS4)
+        img_det = preprocess_image(img_orig, input_scale, binarize)
 
         _t_det_start = time.time()
         dt_boxes = _run_det_tiled(img_det, detector)
@@ -277,9 +197,6 @@ def print_and_save(label, stats, drop_score, out_dir, filename, img_orig):
 
 
 def run_benchmark(args):
-    import ppocr_det as predict_det
-    import ppocr_rec as predict_rec
-
     os.environ['PPOCR_DROP_SCORE'] = str(args.drop_score)
 
     model_args = argparse.Namespace(
