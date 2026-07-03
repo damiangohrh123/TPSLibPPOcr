@@ -83,7 +83,7 @@ def run_once(img_orig, detector, recogniser, input_scale, drop_score, cycles,
     # Compute constants once before the timing loop.
     _min_h   = float(os.environ.get('PPOCR_MIN_HEIGHT', '10')) * input_scale
     _min_w   = float(os.environ.get('PPOCR_MIN_WIDTH',  '8'))  * input_scale
-    binarize = os.environ.get('PPOCR_BINARIZE', '1') != '0'
+    binarize = os.environ.get('PPOCR_BINARIZE', '0') != '0'
 
     times_ms = []
     cpu_pcts = []
@@ -261,7 +261,7 @@ if __name__ == '__main__':
     p.add_argument('--rec_model',   type=str,   default='../model/PP-OCRv6_tiny_rec_rk3588.rknn')
     p.add_argument('--target',      type=str,   default='rk3588')
     p.add_argument('--cycles',      type=int,   default=1)
-    p.add_argument('--input_scale', type=float, default=2.0)  # 2x = best det coverage
+    p.add_argument('--input_scale', type=float, default=1.0)
     p.add_argument('--drop_score',  type=float, default=0.4)
     p.add_argument('--out_dir',     type=str,   default='annotated')
     p.add_argument('--save_crops',   action='store_true',

@@ -66,11 +66,14 @@ def _run_det_tiled(img_det, detector, overlap=256):
     - Wide  (w > h × 1.5): squash + left tile  + right tile  (x-shifted)
     - Tall  (h > w × 1.5): squash + top  tile  + bottom tile (y-shifted)
     - Square-ish          : single pass (no tiling needed)
+
+    Set PPOCR_TILING=0 to disable tile passes and run a single squash pass only.
     """
     h, w = img_det.shape[:2]
 
-    wide = w > h * 1.5
-    tall = h > w * 1.5
+    tiling = os.environ.get('PPOCR_TILING', '1') != '0'
+    wide = tiling and w > h * 1.5
+    tall = tiling and h > w * 1.5
 
     if not wide and not tall:
         # Near-square: a single 480×480 pass covers the image without severe compression.
@@ -123,6 +126,10 @@ def _run_det_tiled(img_det, detector, overlap=256):
 
 def preprocess_image(img, input_scale=1.0, binarize=True):
     """Otsu binarization (optional) followed by Lanczos4 upscale (optional).
+    Binarizing first on the original-resolution image gives Otsu a clean
+    bimodal histogram from the raw sensor data; the subsequent Lanczos upscale
+    then adds gentle anti-aliasing at character edges which the recognition
+    model (trained on natural images) handles better than hard binary edges.
     Returns the preprocessed image ready for detection."""
     if binarize:
         gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
@@ -142,9 +149,9 @@ class TextSystem:
     def __init__(self, args):
         self.text_detector   = predict_det.TextDetector(args)
         self.text_recognizer = predict_rec.TextRecognizer(args)
-        self.drop_score  = float(os.environ.get('PPOCR_DROP_SCORE',  '0.5'))
+        self.drop_score  = float(os.environ.get('PPOCR_DROP_SCORE',  '0.4'))
         self.input_scale = float(os.environ.get('PPOCR_INPUT_SCALE', '1.0'))
-        self.binarize    = os.environ.get('PPOCR_BINARIZE', '1') != '0'
+        self.binarize    = os.environ.get('PPOCR_BINARIZE', '0') != '0'
         # Precompute scaled thresholds — these depend only on init-time env vars.
         self._min_h = float(os.environ.get('PPOCR_MIN_HEIGHT', '10')) * self.input_scale
         self._min_w = float(os.environ.get('PPOCR_MIN_WIDTH',  '8'))  * self.input_scale
