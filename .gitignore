@@ -17,3 +17,7 @@ Thumbs.db
 # Uncomment these if you do NOT want to commit them directly:
 # model/*.onnx
 # model/*.rknn
+
+# Sensitive/proprietary HMI images
+dataset/
+test/images/
