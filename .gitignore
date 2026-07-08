@@ -21,3 +21,6 @@ Thumbs.db
 # Sensitive/proprietary HMI images
 dataset/
 test/images/
+
+# Confidential documents
+*.docx
