@@ -8,13 +8,13 @@
 #include <sstream>
 #include <vector>
 #include <opencv2/core.hpp>
-#include "ocr/alarm_detector.h"
+#include "pipeline/ocr/alarm_detector.h"
 #include "api/http_server.h"
 #include "api/json_write.h"
-#include "ocr/ppocr_det.h"
-#include "ocr/ppocr_rec.h"
-#include "ocr/ppocr_system.h"
-#include "ocr/image_io.h"
+#include "pipeline/ocr/ppocr_det.h"
+#include "pipeline/ocr/ppocr_rec.h"
+#include "pipeline/ocr/ppocr_system.h"
+#include "pipeline/ocr/image_io.h"
 
 namespace {
 

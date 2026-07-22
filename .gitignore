@@ -24,7 +24,7 @@ transition.md
 # Cached aarch64 cross-compile toolchain (local build cache, not source --
 # see the "Reusing the Cached Cross-Toolchain" section of the top-level
 # README.md)
-cpp/cross_toolchain/*.tar.gz
+cross_toolchain/*.tar.gz
 
 # Visual Studio local IDE state / CMake integration -- machine-local,
 # fully regenerable, not part of the documented command-line build.

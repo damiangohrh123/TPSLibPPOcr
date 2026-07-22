@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.16)
-project(ocr CXX)
+project(recc CXX)
 
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
@@ -23,13 +23,13 @@ link_directories(${OPENCV_LIB_DIR} ${CLIPPER_LIB_DIR} ${ZLIB_LIB_DIR})
 # ocr_core: the OCR logic (detector, recognizer, alarm detector, and
 # shared helpers) as a static library, not a runnable program.
 add_library(ocr_core STATIC
-    ocr/rknn_executor.cpp
-    ocr/preprocess.cpp
-    ocr/ppocr_det.cpp
-    ocr/ppocr_rec.cpp
-    ocr/ppocr_system.cpp
-    ocr/alarm_detector.cpp
-    ocr/text_correction.cpp
+    pipeline/ocr/rknn_executor.cpp
+    pipeline/ocr/preprocess.cpp
+    pipeline/ocr/ppocr_det.cpp
+    pipeline/ocr/ppocr_rec.cpp
+    pipeline/ocr/ppocr_system.cpp
+    pipeline/ocr/alarm_detector.cpp
+    pipeline/ocr/text_correction.cpp
 )
 
 target_include_directories(ocr_core PUBLIC ${CMAKE_CURRENT_SOURCE_DIR} ${RKNN_SDK_INCLUDE_DIR})
@@ -66,7 +66,7 @@ endif()
 # Builds an executable that links ocr_core and decodes images via stb_image
 # (benchmark.cpp fits this shape).
 function(add_ocr_tool name source)
-    add_executable(${name} ${source} ocr/image_io.cpp third_party/stb/stb_image_impl.cpp)
+    add_executable(${name} ${source} pipeline/ocr/image_io.cpp third_party/stb/stb_image_impl.cpp)
     target_include_directories(${name} PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/third_party/stb)
     target_link_libraries(${name} PRIVATE ocr_core)
     # librknnrt.so itself dynamically depends on the system's own
@@ -82,12 +82,12 @@ endfunction()
 # coordinates OCR already produced, so it builds and runs on any machine
 # and isn't gated behind BUILD_TOOLS like the RKNN-dependent targets below.
 add_executable(automation_runner
-    automation/automation_runner.cpp
-    automation/rule_matcher.cpp
-    automation/kvm_sequence.cpp
-    automation/rule.cpp
-    automation/screens.cpp
-    automation/json_value.cpp
+    pipeline/automation/automation_runner.cpp
+    pipeline/automation/rule_matcher.cpp
+    pipeline/automation/kvm_sequence.cpp
+    pipeline/automation/rule.cpp
+    pipeline/automation/screens.cpp
+    pipeline/automation/json_value.cpp
 )
 target_include_directories(automation_runner PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
 
@@ -98,7 +98,7 @@ if(BUILD_TOOLS)
     if(NOT RKNN_SDK_LIB_DIR)
         message(FATAL_ERROR "BUILD_TOOLS requires RKNN_SDK_LIB_DIR (needs the real librknnrt.so)")
     endif()
-    add_ocr_tool(benchmark ocr/benchmark.cpp)
+    add_ocr_tool(benchmark pipeline/ocr/benchmark.cpp)
 
     # Internal OCR API server: same OCR + alarm pipeline as `ocr`, kept
     # resident and served over a minimal HTTP interface instead of run once
@@ -108,7 +108,7 @@ if(BUILD_TOOLS)
         api/ocr_server.cpp
         api/http_server.cpp
         api/json_write.cpp
-        ocr/image_io.cpp
+        pipeline/ocr/image_io.cpp
         third_party/stb/stb_image_impl.cpp
     )
     target_include_directories(ocr_server PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/third_party/stb)
