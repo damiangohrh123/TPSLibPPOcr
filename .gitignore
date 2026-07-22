@@ -6,9 +6,6 @@ __pycache__/
 annotated/
 crops/
 
-# Local test images (add your own, don't commit sensitive data)
-python/test_images/
-
 # OS
 .DS_Store
 Thumbs.db
@@ -18,9 +15,20 @@ Thumbs.db
 # model/*.onnx
 # model/*.rknn
 
-# Sensitive/proprietary HMI images
-dataset/
-test/images/
-
 # Confidential documents
 *.docx
+
+# Internal transition/handover notes — not for the public repo
+transition.md
+
+# Cached aarch64 cross-compile toolchain (local build cache, not source --
+# see the "Reusing the Cached Cross-Toolchain" section of the top-level
+# README.md)
+cpp/cross_toolchain/*.tar.gz
+
+# Visual Studio local IDE state / CMake integration -- machine-local,
+# fully regenerable, not part of the documented command-line build.
+.vs/
+out/
+CMakeSettings.json
+CppProperties.json
