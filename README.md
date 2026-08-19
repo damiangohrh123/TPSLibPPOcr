@@ -15,6 +15,8 @@ Detection runs a single full-image pass at the detector's native 480x480 input. 
 
 Preprocessing was tested on both stages and dropped. Binarization and upscaling made detection worse, so detection runs on unprocessed input. CLAHE contrast enhancement and unsharp-mask sharpening, applied to each crop before resizing, hurt recognition accuracy on every test screen: the 82.5% baseline fell to 59.6% with CLAHE and 77.4% with sharpening. Recognition therefore also runs on unprocessed crops.
 
+Those figures come from the `board_deploy/testdata/*.bgr888` screens, which are screenshots of machine displays supplied for testing rather than frames captured through `kvmd` over HDMI. They are the right input for comparing options against each other, since every option sees identical pixels, but the absolute numbers are not production-path figures: a real HDMI capture goes through the machine's video output and the board's HDMI receiver first. Nothing has yet been measured on a real HDMI capture of a real machine.
+
 ## System Architecture
 
 Nothing in this repo drives the machine. `kvmd` captures the screen, `ocr_server` turns pixels into text, and `pipeline/automation/` decides whether a rule matched. Acting on that decision, by sending keyboard and mouse input back over USB HID, is the job of `recc_gen5_test_kit/automation_driver/`, which runs the binaries built here. The board as a whole can therefore control the machine, while this repo covers only the reading and the deciding. The HID output path is verified working on the board, though not yet against the semiconductor machine itself.
