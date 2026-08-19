@@ -17,7 +17,7 @@ Preprocessing was tested on both stages and dropped. Binarization and upscaling 
 
 ## System Architecture
 
-Nothing in this repo drives the machine. `kvmd` captures the screen, `ocr_server` turns pixels into text, and `pipeline/automation/` decides whether a rule matched. Acting on that decision, by sending keyboard and mouse input back over USB HID, is the job of `recc_gen5_test_kit/automation_driver/`, which runs the binaries built here. The board as a whole can therefore control the machine, while this repo covers only the reading and the deciding. The HID output path has not yet been verified against real hardware.
+Nothing in this repo drives the machine. `kvmd` captures the screen, `ocr_server` turns pixels into text, and `pipeline/automation/` decides whether a rule matched. Acting on that decision, by sending keyboard and mouse input back over USB HID, is the job of `recc_gen5_test_kit/automation_driver/`, which runs the binaries built here. The board as a whole can therefore control the machine, while this repo covers only the reading and the deciding. The HID output path is verified working on the board, though not yet against the semiconductor machine itself.
 
 Two independent services run on the board and never talk to each other directly:
 
@@ -232,7 +232,7 @@ Response `400` if the body is too short, or if its size does not match `8 + widt
 cmake --build build --target step_matcher
 ```
 
-Its single binary, `step_matcher`, checks one rule step against one screen file and prints the match as JSON. It is driven by `recc_gen5_test_kit/automation_driver/`, which reads the screen live and can send real USB HID input. The driver's `--dry-run --replay` mode performs the same check against a saved screen without touching hardware. See that folder's README for what is tested and what still needs real-board verification, and `recc_gen5_test_kit/automation_poc/` for the captured screen and rule files it runs against.
+Its single binary, `step_matcher`, checks one rule step against one screen file and prints the match as JSON. It is driven by `recc_gen5_test_kit/automation_driver/`, which reads the screen live and can send real USB HID input. The driver's `--dry-run --replay` mode performs the same check against a saved screen without touching hardware. See that folder's README for what is tested, including the USB gadget setup HID output depends on, and `recc_gen5_test_kit/automation_poc/` for the captured screen and rule files it runs against.
 
 ## Current Limitations
 
