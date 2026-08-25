@@ -133,24 +133,19 @@ TextSystem::TextSystem(TextDetector detector, TextRecognizer recognizer,
 std::vector<OcrResult> TextSystem::run(const cv::Mat& img, RunTiming* timing) const {
 	std::vector<Quad> dt_boxes;
 
-	// Skips detection on images smaller than 80x400; falls through to the
-	// whole-image fallback below. det_ms stays 0 on that path -- no
-	// detection model ran.
-	if (img.rows >= 80 && img.cols >= 400) {
-		auto det_start = std::chrono::steady_clock::now();
-		std::vector<Quad> raw_boxes = detector_.run(img);
-		if (timing) timing->det_ms = ms_since(det_start);
+	auto det_start = std::chrono::steady_clock::now();
+	std::vector<Quad> raw_boxes = detector_.run(img);
+	if (timing) timing->det_ms = ms_since(det_start);
 
-		if (!raw_boxes.empty()) {
-			dt_boxes = sorted_boxes(std::move(raw_boxes));
+	if (!raw_boxes.empty()) {
+		dt_boxes = sorted_boxes(std::move(raw_boxes));
 
-			// Drop boxes too small to contain readable text.
-			std::vector<Quad> size_filtered;
-			for (auto& b : dt_boxes) {
-				if (box_size_ok(b, min_height_, min_width_)) size_filtered.push_back(b);
-			}
-			dt_boxes = nms_boxes(size_filtered);
+		// Drop boxes too small to contain readable text.
+		std::vector<Quad> size_filtered;
+		for (auto& b : dt_boxes) {
+			if (box_size_ok(b, min_height_, min_width_)) size_filtered.push_back(b);
 		}
+		dt_boxes = nms_boxes(size_filtered);
 	}
 
 	std::vector<OcrResult> results;

@@ -16,7 +16,7 @@ struct OcrResult {
 // Pass a pointer to get a breakdown (used by benchmark.cpp); other callers
 // omit the argument.
 struct RunTiming {
-	double det_ms = 0.0;  // 0 if the small-image fallback skipped detection
+	double det_ms = 0.0;
 	double rec_ms = 0.0;
 	int n_crops = 0;       // boxes recognized (1 on the whole-image fallback path)
 };
