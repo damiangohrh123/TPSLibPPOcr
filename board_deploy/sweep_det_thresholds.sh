@@ -3,12 +3,13 @@
 # unclip_ratio) across a small grid, against every image in testdata/,
 # and logs box counts + recognized text + timing for each combination to
 # a CSV. Run this on the board, from board_deploy/, after rebuilding
-# benchmark with the new CLI args (see recc/pipeline/ocr/benchmark.cpp).
+# benchmark (see recc/pipeline/ocr/benchmark.cpp for the positional arg order).
 #
-# These three values have been hardcoded since the project's first commit
-# with no record of ever being tested against alternatives -- this script
-# is that test. max_candidates is left at its default (3000); it only
-# matters on a very cluttered screen, unlikely to be the bottleneck here.
+# This sweep has already been run once: det_thresh 0.2 beat the old 0.3
+# (see the default in api/ocr_server.cpp, and Appendix C of
+# documentation/Automation_Pipeline.docx). Kept for re-running after a model
+# or screen-layout change. max_candidates stays at its default (3000); it
+# only matters on a very cluttered screen.
 #
 # Usage: ./sweep_det_thresholds.sh
 # Output: sweep_results.csv (one row per image x parameter combination)

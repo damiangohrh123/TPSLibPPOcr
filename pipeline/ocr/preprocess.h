@@ -14,13 +14,13 @@ class NormalizeImage {
 public:
     NormalizeImage(double scale, const std::array<double, 3>& mean, const std::array<double, 3>& std);
 
-    // Converts img to CV_32FC3 and applies (img * scale - mean) / std per channel.
+    // Returns a new image; img is left untouched.
     cv::Mat operator()(const cv::Mat& img) const;
 
 private:
-    double scale_;      // multiplier applied first
-    cv::Scalar mean_;   // per-channel value subtracted after scaling
-    cv::Scalar std_;    // per-channel value divided by last
+    double scale_;
+    cv::Scalar mean_;
+    cv::Scalar std_;
 };
 
 // Flattens an HWC CV_32FC3 image into a flat float32 buffer (batch size 1),

@@ -8,8 +8,8 @@
 // Thin C++ wrapper around librknnrt's C API (third_party/rknn_api.h).
 // C++ port of the Python reference implementation's rknn_executor.py.
 
-// One model output: dequantized float data plus its tensor shape (the C API
-// doesn't report shape the way a numpy array would).
+// One model output: dequantized float data plus its tensor shape (rknn_outputs_get
+// returns a flat buffer with no dims, so the shape is queried separately).
 struct RknnOutput {
     std::vector<float> data;
     std::vector<int> shape;  // e.g. {1, 1, 480, 480} for det's output map
@@ -33,8 +33,8 @@ public:
     // num_cores duplicates the loaded context that many times (capped at 3,
     // the number of NPU cores on RK3588) and pins each duplicate to its own
     // core, so concurrent run() calls on different core_slot values execute
-    // on different physical cores. num_cores=1 (the default) keeps the old
-    // single-context, single-core behavior.
+    // on different physical cores. num_cores=1 (the default) creates a single
+    // context and leaves core selection to the runtime.
     bool load(const std::string& model_path, int num_cores = 1);
 
     // Runs inference on one input tensor, using the context pinned to

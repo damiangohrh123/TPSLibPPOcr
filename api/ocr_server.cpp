@@ -48,14 +48,11 @@ std::string results_to_json(const std::vector<OcrResult>& results, const AlarmRe
             out << ",\"text\":\"" << json_escape(*alarm.text) << "\"";
         }
     }
-    out << "}," << "\"timing_ms\":" << timing_ms << "}";
+    out << "},\"timing_ms\":" << timing_ms << "}";
     return out.str();
 }
 
-// Runs the OCR + alarm-detection pipeline on an already-decoded BGR cv::Mat
-// and times it. Only caller is /ocr, which builds the Mat directly over
-// raw BGR888 bytes -- no JPEG/PNG decode step anywhere in this server, raw
-// BGR888 is the only input format the pipeline accepts.
+// Runs the OCR + alarm-detection pipeline on a BGR cv::Mat and times it.
 HttpResponse run_ocr(TextSystem& text_system, AlarmDetector& alarm_detector, const cv::Mat& img) {
     HttpResponse res;
     auto t0 = std::chrono::steady_clock::now();
@@ -68,11 +65,6 @@ HttpResponse run_ocr(TextSystem& text_system, AlarmDetector& alarm_detector, con
     return res;
 }
 
-// Reads a big-endian uint32 out of a 4-byte buffer, matching the byte order
-// kvmd's own raw channel already uses for its width/height/size fields (see
-// recc_gen5_test_kit/test_ocr_continuous.py, which builds this same request),
-// so a client that already speaks kvmd's raw protocol doesn't need a second
-// convention.
 // One place to build a 400: the /ocr handler rejects three different ways and
 // every one of them needs the same status + JSON-error shape.
 HttpResponse bad_request(const std::string& message) {
@@ -82,6 +74,8 @@ HttpResponse bad_request(const std::string& message) {
     return res;
 }
 
+// Big-endian to match kvmd's raw channel, so a client that already speaks
+// that protocol needs no second convention for this endpoint.
 uint32_t read_u32_be(const unsigned char* p) {
     return (uint32_t(p[0]) << 24) | (uint32_t(p[1]) << 16) | (uint32_t(p[2]) << 8) | uint32_t(p[3]);
 }

@@ -3,8 +3,9 @@
 #include <string>
 #include <vector>
 
-// Matches an offline-drafted, pre-tested rule against real OCR output,
-// and turns a match into a KVM action sequence. Deliberately has zero
+// Fuzzy-matches a rule's keyword against real OCR output and locates the box
+// (or the input field beside it) to act on; step_matcher.cpp is what turns
+// that into an action. Deliberately has zero
 // OpenCV/RKNN dependency -- this logic never touches an image, only the
 // text and coordinates OCR already produced, so it builds and runs
 // anywhere, unlike the OCR pipeline itself.

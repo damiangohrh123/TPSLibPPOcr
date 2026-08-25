@@ -11,10 +11,7 @@ public:
     explicit Parser(const std::string& text) : s_(text), i_(0) {}
 
     JsonValue parse() {
-        skip_ws();
-        JsonValue v = parse_value();
-        skip_ws();
-        return v;
+        return parse_value();
     }
 
 private:
@@ -57,15 +54,12 @@ private:
         JsonValue v;
         v.type = JsonType::Object;
         expect('{');
-        skip_ws();
         if (consume('}')) return v;
         while (true) {
-            skip_ws();
             std::string key = parse_raw_string();
             expect(':');
             JsonValue val = parse_value();
             v.obj.emplace_back(std::move(key), std::move(val));
-            skip_ws();
             if (consume(',')) continue;
             expect('}');
             break;
@@ -77,11 +71,9 @@ private:
         JsonValue v;
         v.type = JsonType::Array;
         expect('[');
-        skip_ws();
         if (consume(']')) return v;
         while (true) {
             v.arr.push_back(parse_value());
-            skip_ws();
             if (consume(',')) continue;
             expect(']');
             break;

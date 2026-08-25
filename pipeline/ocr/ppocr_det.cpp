@@ -7,8 +7,7 @@
 
 namespace {
 
-// Resizes an image to (target_w, target_h) and records how much each
-// dimension was scaled.
+// A resized image plus the per-dimension scale factors it was resized by.
 struct ResizeResult {
 	cv::Mat image;
 	float ratio_h;  // target_h / original image height
@@ -144,7 +143,6 @@ float DBPostProcess::box_score_fast(const cv::Mat& pred_map, const Quad& box) {
 std::vector<Quad> DBPostProcess::boxes_from_bitmap(const cv::Mat& pred_map, const cv::Mat& bitmap_u8,
 	int dest_width, int dest_height,
 	float ratio_w, float ratio_h) const {
-	int height = bitmap_u8.rows, width = bitmap_u8.cols;
 
 	// Finds every connected white region in the binary mask.
 	std::vector<std::vector<cv::Point>> contours;
@@ -174,15 +172,11 @@ std::vector<Quad> DBPostProcess::boxes_from_bitmap(const cv::Mat& pred_map, cons
 		auto [box2, sside2] = get_mini_boxes(unclipped);
 		if (sside2 < kMinSize + 2) continue;
 
-		// Falls back to computing the ratio from raw dimensions if none was given.
-		float rw = (ratio_w > 0.0f) ? ratio_w : (static_cast<float>(width) / dest_width);
-		float rh = (ratio_h > 0.0f) ? ratio_h : (static_cast<float>(height) / dest_height);
-
 		// Scales each corner back to the original image size and clamps it in bounds.
 		Quad final_box;
 		for (int i = 0; i < 4; ++i) {
-			float x = std::round(box2[i].x / rw);
-			float y = std::round(box2[i].y / rh);
+			float x = std::round(box2[i].x / ratio_w);
+			float y = std::round(box2[i].y / ratio_h);
 			x = std::clamp(x, 0.0f, static_cast<float>(dest_width));
 			y = std::clamp(y, 0.0f, static_cast<float>(dest_height));
 			final_box[i] = cv::Point2f(x, y);

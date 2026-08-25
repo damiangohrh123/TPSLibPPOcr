@@ -6,7 +6,6 @@
 #include <cstdio>
 #include <cstring>
 
-// Destructor: release() is idempotent, so this is safe even if never loaded.
 RknnExecutor::~RknnExecutor() {
 	release();
 }
@@ -44,7 +43,6 @@ bool RknnExecutor::load(const std::string& model_path, int num_cores) {
 		return false;
 	}
 
-	// Look up each output's shape by index and store it for later use in run().
 	output_shapes_.assign(io_num.n_output, {});
 	for (uint32_t i = 0; i < io_num.n_output; ++i) {
 		rknn_tensor_attr attr;
@@ -59,9 +57,7 @@ bool RknnExecutor::load(const std::string& model_path, int num_cores) {
 		}
 	}
 
-	// Duplicates the context once per extra core requested, pinning each
-	// duplicate (and the original) to its own core so run() calls made with
-	// different core_slot values can execute concurrently.
+	// One context per requested core, each pinned to its own core (see load() in the header).
 	int n = std::max(1, std::min(num_cores, 3));
 	if (n > 1) {
 		check_ret(rknn_set_core_mask(ctx, kCoreMasks[0]), "rknn_set_core_mask(slot 0)");
@@ -138,7 +134,6 @@ void RknnExecutor::release() {
 	}
 }
 
-// Combines construction + load() so callers get a ready-to-use object or nullptr.
 std::unique_ptr<RknnExecutor> load_model(const std::string& model_path, int num_cores) {
 	auto exec = std::make_unique<RknnExecutor>();
 	if (!exec->load(model_path, num_cores)) {

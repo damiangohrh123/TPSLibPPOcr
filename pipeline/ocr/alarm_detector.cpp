@@ -4,7 +4,6 @@
 AlarmDetector::AlarmDetector(int min_area, double min_aspect_ratio, double max_y_fraction)
     : min_area_(min_area), min_aspect_ratio_(min_aspect_ratio), max_y_fraction_(max_y_fraction) {}
 
-// Finds the banner, then extracts its text from ocr_results if supplied.
 AlarmResult AlarmDetector::detect(const cv::Mat& img, const std::vector<OcrResult>& ocr_results) const {
     AlarmResult result;
     auto [alarm, bbox] = find_alarm_banner(img);
@@ -12,13 +11,10 @@ AlarmResult AlarmDetector::detect(const cv::Mat& img, const std::vector<OcrResul
     if (!alarm) return result;
 
     result.bbox = bbox;
-    if (!ocr_results.empty()) {
-        result.text = extract_alarm_text(ocr_results, bbox);
-    }
+    result.text = extract_alarm_text(ocr_results, bbox);
     return result;
 }
 
-// Masks for red, then finds the largest contour passing all 3 filters.
 std::pair<bool, cv::Rect> AlarmDetector::find_alarm_banner(const cv::Mat& img) const {
     int h_img = img.rows;
 
@@ -45,14 +41,11 @@ std::pair<bool, cv::Rect> AlarmDetector::find_alarm_banner(const cv::Mat& img) c
         cv::Rect r = cv::boundingRect(cnt);
         int area = r.width * r.height;
 
-        // Drops regions smaller than min_area_.
         if (area < min_area_) continue;
 
-        // Drops regions narrower than min_aspect_ratio_.
         double aspect = r.height > 0 ? static_cast<double>(r.width) / r.height : 0.0;
         if (aspect < min_aspect_ratio_) continue;
 
-        // Drops regions further down the image than max_y_fraction_.
         if (static_cast<double>(r.y) / h_img > max_y_fraction_) continue;
 
         if (area > best_area) {
@@ -66,7 +59,6 @@ std::pair<bool, cv::Rect> AlarmDetector::find_alarm_banner(const cv::Mat& img) c
     return {found, best_bbox};
 }
 
-// Joins the text of every OCR box whose center falls inside bbox.
 std::optional<std::string> AlarmDetector::extract_alarm_text(const std::vector<OcrResult>& ocr_results,
                                                                const cv::Rect& bbox) const {
     std::string joined;

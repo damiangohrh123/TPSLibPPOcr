@@ -13,13 +13,12 @@ struct OcrResult {
 };
 
 // Optional per-call stage timing for TextSystem::run(), in milliseconds.
-// Pass a pointer to get a breakdown (used by benchmark.cpp); existing
-// callers that don't need it just omit the argument and pay no cost beyond
-// one null check.
+// Pass a pointer to get a breakdown (used by benchmark.cpp); other callers
+// omit the argument.
 struct RunTiming {
 	double det_ms = 0.0;  // 0 if the small-image fallback skipped detection
 	double rec_ms = 0.0;
-	int n_crops = 0;       // boxes recognized (1 on the small-image fallback path)
+	int n_crops = 0;       // boxes recognized (1 on the whole-image fallback path)
 };
 
 // Ties detection and recognition together into the full per-image pipeline.

@@ -37,9 +37,10 @@ public:
 
     bool is_loaded() const { return model_ && model_->is_loaded(); }
 
-    // Resizes each crop to 320x48, normalizes it, and runs the model.
-    // Crops are split across kNumCores NPU cores and run concurrently;
-    // results are returned in the same order as imgs.
+    // Resizes each crop into a 320x48 zero-padded canvas (aspect preserved),
+    // normalizes it, and runs the model. Crops are split across the loaded
+    // NPU cores (up to kNumCores) and run concurrently; results are returned
+    // in the same order as imgs.
     std::vector<RecResult> run(const std::vector<cv::Mat>& imgs) const;
 
     static constexpr int kRecH = 48;   // fixed crop height the model expects

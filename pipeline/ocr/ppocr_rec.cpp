@@ -22,7 +22,7 @@ CtcLabelDecode::CtcLabelDecode(const std::string& character_dict_path, bool use_
 			character_.push_back(std::move(line));
 		}
 	}
-	if (use_space_char) character_.push_back(" ");  // adds a space character last
+	if (use_space_char) character_.push_back(" ");
 }
 
 RecResult CtcLabelDecode::decode(const float* preds, int seq_len, int num_classes) const {
@@ -77,22 +77,13 @@ std::vector<RecResult> TextRecognizer::run(const std::vector<cv::Mat>& imgs) con
 
 	// Resizes, normalizes, and recognizes one crop, writing into its slot.
 	auto process_one = [&](size_t idx, int core_slot) {
-		// Matches PaddleOCR's own RecResizeImg (padding=True, its default):
-		// scale to kRecH preserving aspect ratio, capped at kRecW, then pad
-		// the remaining width with zeros -- never stretch. The model was
-		// fine-tuned expecting exactly this (see
+		// Matches PaddleOCR's RecResizeImg (padding=True, its default), which is
+		// what the model was fine-tuned against (see
 		// recc_gen5_test_kit/finetune/PP-OCRv6_tiny_rec_finetune.yml's Eval
-		// transform, RecResizeImg with the same default), but a plain
-		// cv::resize to kRecW x kRecH was stretching every crop instead,
-		// most severely on short tokens: a label like "F3" or "Z2:" (roughly
-		// 24x20) has an aspect ratio of ~1.2 against the model's native 6.67
-		// (320/48), so it was squeezed about 5.6x narrower than what the
-		// model saw in training. That distortion lines up with the
-		// recorded error patterns in a corrupted decimal point ("2-000" for
-		// "2.000") and l/1 confusion -- both are single-pixel-column
-		// mistakes on characters that were already compressed to a handful
-		// of columns. Wide crops (aspect >= 6.67, e.g. the full alarm banner
-		// text) still scale down to fill kRecW exactly, same as before.
+		// transform): scale to kRecH preserving aspect ratio, cap at kRecW, then
+		// zero-pad the remaining width -- never stretch. The old plain cv::resize
+		// squeezed short tokens (aspect ~1.2) about 5.6x narrower than the
+		// model's native 6.67 (320/48).
 		const cv::Mat& src = imgs[idx];
 		double ratio = static_cast<double>(src.cols) / std::max(src.rows, 1);
 		int resized_w = static_cast<int>(std::ceil(kRecH * ratio));

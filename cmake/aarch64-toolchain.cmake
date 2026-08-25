@@ -7,10 +7,8 @@
 # wrapper compilers this file points at, which pass the right -B flags for
 # the target binutils and the gcc-9 frontend.
 #
-# Usage, from recc/:
-#   cmake -B build -S . -DCMAKE_TOOLCHAIN_FILE=cmake/aarch64-toolchain.cmake \
-#         -DOPENCV_INCLUDE_DIR=$HOME/deps-arm64/include/opencv4 ... -DBUILD_TOOLS=ON
-#   cmake --build build -j
+# Usage: add -DCMAKE_TOOLCHAIN_FILE=cmake/aarch64-toolchain.cmake to the
+# configure command in that same README section.
 
 set(CMAKE_SYSTEM_NAME Linux)
 set(CMAKE_SYSTEM_PROCESSOR aarch64)

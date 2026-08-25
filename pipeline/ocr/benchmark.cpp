@@ -2,9 +2,8 @@
 // on one image N times, timing det/rec/alarm separately, plus CPU, memory,
 // and recognized text. Calls the same shared pipeline code ocr_server.cpp
 // uses, so there's one implementation of detection/recognition/alarm
-// assembly, not a separate copy. With cycles=1 this doubles as a single-shot
-// CLI tool: prints the same detection/recognition/alarm output plus
-// timing/CPU/memory stats.
+// assembly, not a separate copy. With cycles=1 it doubles as a single-shot
+// CLI tool.
 #include <algorithm>
 #include <chrono>
 #include <cmath>
@@ -25,9 +24,8 @@
 
 namespace {
 
-// --- raw .bgr888 loading (this is the only consumer) -----------------------
-// Raw BGR888 only: no JPEG/PNG decode anywhere in this pipeline, since JPEG
-// artifacts distort small text and production only ever captures raw.
+// Raw BGR888 only: JPEG artifacts distort small text and production only
+// ever captures raw, so nothing here decodes JPEG/PNG.
 
 // Parses "..._<width>x<height>.bgr888" -> {width, height}, or {0, 0} if the
 // file name doesn't match that shape. Raw pixel data carries no size
@@ -77,8 +75,6 @@ void print_box(const Quad& box) {
         printf("%s(%.0f,%.0f)", i ? "-" : "", box[i].x, box[i].y);
     }
 }
-
-// Reads process memory/CPU stats from /proc.
 
 // Returns this process's resident memory (RSS) in MB.
 double get_rss_mb() {
@@ -217,10 +213,8 @@ int main(int argc, char** argv) {
     const double drop_score = argc > 6 ? std::atof(argv[6]) : 0.4;
     // Detection knobs are CLI-configurable so a sweep can compare values
     // without recompiling. The defaults match api/ocr_server.cpp's production
-    // values, so a plain run reproduces server behaviour: det_thresh 0.2 won a
-    // 36-combination sweep over 394 ground-truth fields across 5 real screens
-    // (82.5% vs 80.7% at the old 0.3) -- see Appendix C of
-    // documentation/Automation_Pipeline.docx.
+    // values, so a plain run reproduces server behaviour (see there for why
+    // det_thresh is 0.2).
     const float det_thresh = argc > 7 ? std::atof(argv[7]) : 0.2f;
     const float box_thresh = argc > 8 ? std::atof(argv[8]) : 0.4f;
     const float unclip_ratio = argc > 9 ? std::atof(argv[9]) : 1.5f;
@@ -247,9 +241,6 @@ int main(int argc, char** argv) {
     printf("Image load       : %.1f ms  (%zu bytes)\n", load_ms, img.total() * img.elemSize());
 
     printf("Loading models (not included in timing)...\n");
-    // Same construction as ocr_server.cpp, except every detection knob here
-    // is CLI-configurable instead of fixed, so a sweep script can compare
-    // alternatives without recompiling.
     TextDetector detector(det_model_path,
                           det_thresh, box_thresh, unclip_ratio, max_candidates);
     if (!detector.is_loaded()) {

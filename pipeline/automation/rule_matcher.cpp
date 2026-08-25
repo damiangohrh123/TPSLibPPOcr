@@ -57,9 +57,9 @@ int count_matches(const std::string& a, int alo, int ahi,
 }
 
 // Ratcliff/Obershelp similarity ratio, in [0, 1] -- the same algorithm
-// Python's difflib.SequenceMatcher.ratio() uses (minus the "autojunk"
+// Python's difflib.SequenceMatcher.ratio() uses, minus the "autojunk"
 // heuristic, which only applies to sequences of 200+ elements and is
-// irrelevant for short UI labels). Only find_by_keyword uses it.
+// irrelevant for short UI labels.
 double sequence_ratio(const std::string& a, const std::string& b) {
     int total_len = static_cast<int>(a.size() + b.size());
     if (total_len == 0) return 1.0;
