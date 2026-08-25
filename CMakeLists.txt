@@ -28,30 +28,19 @@ add_library(ocr_core STATIC
     pipeline/ocr/ppocr_rec.cpp
     pipeline/ocr/ppocr_system.cpp
     pipeline/ocr/alarm_detector.cpp
-    pipeline/ocr/text_correction.cpp
 )
 
 target_include_directories(ocr_core PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
-# imgcodecs (imread/imwrite/imdecode/imencode) is intentionally not linked:
-# no code in this library reads or writes image files -- frames arrive as
-# already-decoded cv::Mat objects from an earlier pipeline stage. Dropping it
-# avoids needing libjpeg/libpng for the board build. zlib is still required,
-# though: opencv_core's own persistence (FileStorage) code calls gz* functions
-# internally regardless of whether imgcodecs is linked in.
+# imgcodecs is intentionally not linked: frames arrive as already-decoded
+# cv::Mat from an earlier pipeline stage, so dropping it avoids needing
+# libjpeg/libpng for the board build. zlib is still required regardless --
+# opencv_core's FileStorage code calls gz* internally.
 #
-# opencv_core and opencv_imgproc are wrapped in a linker group: imgproc's
-# object files call back into core-internal helpers (softdouble, DFT,
-# BufferArea, etc.) that our own code never calls directly, so a plain
-# left-to-right link only pulls in the core.a members our code references
-# and leaves those internal-to-imgproc needs unresolved. --start-group
-# makes ld keep re-scanning both archives until nothing new resolves,
-# instead of a single pass.
-#
-# dl comes right after the opencv group deliberately: opencv_core's plugin
-# loader (dlopen/dlsym/dlclose/dladdr) is only referenced from inside
-# opencv_core.a itself, never from our own code, so -ldl has to appear
-# after opencv_core in the link line or the linker never sees a pending
-# need for it to satisfy.
+# --start-group around core+imgproc: imgproc calls core-internal helpers our
+# own code never references, which a single left-to-right pass would leave
+# unresolved. -ldl must follow the group: opencv_core's plugin loader is the
+# only caller of dlopen/dlsym, so the pending need only exists after core
+# has been scanned.
 target_link_libraries(ocr_core PUBLIC
     -Wl,--start-group opencv_core opencv_imgproc -Wl,--end-group
     dl polyclipping z pthread

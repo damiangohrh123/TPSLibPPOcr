@@ -50,7 +50,6 @@ recc/
       ppocr_rec.cpp/h              # recognition
       ppocr_system.cpp/h           # det + rec pipeline, NMS
       alarm_detector.cpp/h         # HSV-based alarm banner detection
-      text_correction.cpp/h        # narrow post-processing fix for two known recognition mistakes
       rknn_executor.cpp/h          # low-level RKNN model runner
       preprocess.cpp/h             # normalisation shared by both models
     automation/                    # Stage 2: rule matching (see "Rule-Based Automation" below)

@@ -5,7 +5,6 @@
 #include <numeric>
 #include <utility>
 #include <opencv2/imgproc.hpp>
-#include "text_correction.h"
 
 namespace {
 
@@ -169,7 +168,6 @@ std::vector<OcrResult> TextSystem::run(const cv::Mat& img, RunTiming* timing) co
 			Quad box = { cv::Point2f(0, 0), cv::Point2f(static_cast<float>(w), 0),
 						cv::Point2f(static_cast<float>(w), static_cast<float>(h)),
 						cv::Point2f(0, static_cast<float>(h)) };
-			rec_res[0].text = correct_known_ocr_errors(rec_res[0].text);
 			results.push_back({ box, rec_res[0] });
 		}
 		return results;
@@ -189,7 +187,6 @@ std::vector<OcrResult> TextSystem::run(const cv::Mat& img, RunTiming* timing) co
 	}
 	for (size_t i = 0; i < dt_boxes.size() && i < rec_res.size(); ++i) {
 		if (rec_res[i].score >= drop_score_) {
-			rec_res[i].text = correct_known_ocr_errors(rec_res[i].text);
 			results.push_back({ dt_boxes[i], rec_res[i] });
 		}
 	}
