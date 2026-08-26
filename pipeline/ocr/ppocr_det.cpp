@@ -237,7 +237,7 @@ std::vector<Quad> filter_tag_det_res(const std::vector<Quad>& dt_boxes,
 
 TextDetector::TextDetector(const std::string& det_model_path,
 	float det_thresh, float box_thresh, float unclip_ratio, int max_candidates)
-	: model_(load_model(det_model_path)),
+	: model_(load_model(det_model_path, kNumCores)),
 	// Configures normalization as scale=1, mean=0, std=1 -- a no-op, since
 	// this model already has normalization baked into its weights.
 	normalize_(1.0, { 0.0, 0.0, 0.0 }, { 1.0, 1.0, 1.0 }),
@@ -247,7 +247,7 @@ TextDetector::TextDetector(const std::string& det_model_path,
 	}
 }
 
-std::vector<Quad> TextDetector::run(const cv::Mat& img) const {
+std::vector<Quad> TextDetector::run(const cv::Mat& img, int core_slot) const {
 	if (!is_loaded()) return {};
 
 	int src_h = img.rows, src_w = img.cols;
@@ -257,7 +257,7 @@ std::vector<Quad> TextDetector::run(const cv::Mat& img) const {
 	std::vector<float> batch = to_nhwc_batch(normalized);
 
 	// Runs the detection model on the prepared image.
-	auto outputs = model_->run(batch);
+	auto outputs = model_->run(batch, core_slot);
 	if (outputs.empty()) return {};
 
 	// Checks that the output is a single-channel probability map.

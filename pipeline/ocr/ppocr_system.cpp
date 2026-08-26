@@ -3,6 +3,8 @@
 #include <chrono>
 #include <cmath>
 #include <numeric>
+#include <thread>
+#include <tuple>
 #include <utility>
 #include <opencv2/imgproc.hpp>
 
@@ -118,6 +120,90 @@ std::vector<Quad> sorted_boxes(std::vector<Quad> dt_boxes) {
 	return dt_boxes;
 }
 
+// Appends `boxes` to `out`, shifting each point by (dx, dy) to map a tile's
+// local coordinates back into the full frame.
+void append_shifted(std::vector<Quad>& out, const std::vector<Quad>& boxes, float dx, float dy) {
+	for (Quad b : boxes) {
+		for (auto& p : b) {
+			p.x += dx;
+			p.y += dy;
+		}
+		out.push_back(b);
+	}
+}
+
+int grid_tile_count(int total, int native_size, int overlap) {
+	if (total <= native_size) return 1;
+	int step = std::max(1, native_size - overlap);
+	return static_cast<int>(std::ceil(static_cast<double>(total - overlap) / step));
+}
+
+std::vector<std::pair<int, int>> make_tile_spans(int total, int n_tiles, int overlap) {
+	int tile_size = (total + (n_tiles - 1) * overlap) / n_tiles;
+	std::vector<std::pair<int, int>> spans;
+	spans.reserve(n_tiles);
+	for (int i = 0; i < n_tiles; ++i) {
+		int start = (i == n_tiles - 1) ? (total - tile_size) : (i * (tile_size - overlap));
+		spans.push_back({ start, tile_size });
+	}
+	return spans;
+}
+
+// Runs the detector on the full image, then on a grid of overlapping tiles
+// near the detector's native input size, merging all detected boxes (NMS in
+// TextSystem::run dedups the overlap). Tiles are dispatched round-robin
+// across the detector's core-pinned contexts, each core accumulating into
+// its own vector to avoid locking; results are concatenated after all
+// threads join. overlap=256 is required, not just tuned: it's the minimum
+// that guarantees the widest field on these screens (245px) never splits
+// across a tile boundary.
+std::vector<Quad> run_det_tiled(const cv::Mat& img_det, const TextDetector& detector, int overlap = 256) {
+	int h = img_det.rows, w = img_det.cols;
+
+	int n_x = grid_tile_count(w, TextDetector::kDetW, overlap);
+	int n_y = grid_tile_count(h, TextDetector::kDetH, overlap);
+
+	std::vector<Quad> all_boxes = detector.run(img_det, 0);  // full-image "squash" pass
+
+	if (n_x <= 1 && n_y <= 1) {
+		return all_boxes;
+	}
+
+	std::vector<std::tuple<int, int, int, int>> tiles;  // x, y, tile_w, tile_h
+	for (const auto& [y, tile_h] : make_tile_spans(h, n_y, overlap)) {
+		for (const auto& [x, tile_w] : make_tile_spans(w, n_x, overlap)) {
+			tiles.emplace_back(x, y, tile_w, tile_h);
+		}
+	}
+
+	int n_cores = detector.num_cores();
+	if (n_cores <= 1) {
+		for (const auto& [x, y, tile_w, tile_h] : tiles) {
+			cv::Mat tile = img_det(cv::Rect(x, y, tile_w, tile_h));
+			append_shifted(all_boxes, detector.run(tile, 0), static_cast<float>(x), static_cast<float>(y));
+		}
+		return all_boxes;
+	}
+
+	std::vector<std::vector<Quad>> per_core_boxes(n_cores);
+	std::vector<std::thread> workers;
+	workers.reserve(n_cores);
+	for (int core = 0; core < n_cores; ++core) {
+		workers.emplace_back([&, core]() {
+			for (size_t i = core; i < tiles.size(); i += n_cores) {
+				const auto& [x, y, tile_w, tile_h] = tiles[i];
+				cv::Mat tile = img_det(cv::Rect(x, y, tile_w, tile_h));
+				append_shifted(per_core_boxes[core], detector.run(tile, core), static_cast<float>(x), static_cast<float>(y));
+			}
+		});
+	}
+	for (auto& worker : workers) worker.join();
+	for (auto& boxes : per_core_boxes) {
+		all_boxes.insert(all_boxes.end(), boxes.begin(), boxes.end());
+	}
+	return all_boxes;
+}
+
 }  // namespace
 
 TextSystem::TextSystem(TextDetector detector, TextRecognizer recognizer,
@@ -134,7 +220,7 @@ std::vector<OcrResult> TextSystem::run(const cv::Mat& img, RunTiming* timing) co
 	std::vector<Quad> dt_boxes;
 
 	auto det_start = std::chrono::steady_clock::now();
-	std::vector<Quad> raw_boxes = detector_.run(img);
+	std::vector<Quad> raw_boxes = run_det_tiled(img, detector_);
 	if (timing) timing->det_ms = ms_since(det_start);
 
 	if (!raw_boxes.empty()) {

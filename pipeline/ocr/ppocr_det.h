@@ -61,11 +61,16 @@ public:
     bool is_loaded() const { return model_ && model_->is_loaded(); }
 
     // Resizes and normalizes the image, runs the model, and converts its
-    // output into quads in the original image's coordinates.
-    std::vector<Quad> run(const cv::Mat& img) const;
+    // output into quads in the original image's coordinates. core_slot
+    // selects which core-pinned context to run on (0-based; see kNumCores).
+    std::vector<Quad> run(const cv::Mat& img, int core_slot = 0) const;
+
+    // Number of core-pinned contexts actually loaded (see kNumCores).
+    int num_cores() const { return model_ ? model_->num_cores() : 1; }
 
     static constexpr int kDetH = 480;  // fixed input height the model expects
     static constexpr int kDetW = 480;  // fixed input width the model expects
+    static constexpr int kNumCores = 3;  // NPU cores to dispatch tiled detection across
 
 private:
     std::unique_ptr<RknnExecutor> model_;  // the loaded detection model
