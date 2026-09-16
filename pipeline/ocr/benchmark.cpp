@@ -1,9 +1,8 @@
-// Runs the OCR + alarm-detection pipeline (TextSystem::run + AlarmDetector)
-// on one image N times, timing det/rec/alarm separately, plus CPU, memory,
-// and recognized text. Calls the same shared pipeline code ocr_server.cpp
-// uses, so there's one implementation of detection/recognition/alarm
-// assembly, not a separate copy. With cycles=1 it doubles as a single-shot
-// CLI tool.
+// Runs the OCR pipeline (TextSystem::run) on one image N times, timing detection and
+// recognition separately, plus CPU, memory, and recognized text. Calls the same shared
+// pipeline code the rest of the repo uses, so there's one implementation of
+// detection and recognition, not a separate copy. With cycles=1 it doubles as a
+// single-shot CLI tool.
 #include <algorithm>
 #include <chrono>
 #include <cmath>
@@ -17,7 +16,6 @@
 #include <utility>
 #include <vector>
 #include <opencv2/core.hpp>
-#include "alarm_detector.h"
 #include "ppocr_det.h"
 #include "ppocr_rec.h"
 #include "ppocr_system.h"
@@ -130,26 +128,21 @@ double stddev(const std::vector<double>& v) {
     return std::sqrt(sq_sum / v.size());
 }
 
-// Per-cycle timing/resource samples, plus the last cycle's OCR + alarm results.
+// Per-cycle timing/resource samples, plus the last cycle's OCR results.
 // Every stage is sampled per cycle so its mean is comparable with times_ms; taking one
 // cycle's stage times against an average over all of them leaves a meaningless remainder.
 struct CycleTotals {
-    std::vector<double> times_ms;     // wall-clock time per cycle (det+rec+alarm+bookkeeping)
+    std::vector<double> times_ms;     // wall-clock time per cycle (det+rec+bookkeeping)
     std::vector<double> det_mss;      // detection time per cycle
     std::vector<double> rec_mss;      // recognition time per cycle
-    std::vector<double> alarm_mss;    // alarm-detection time per cycle
     std::vector<double> cpu_pcts;     // CPU% estimate per cycle
     std::vector<double> mem_mbs;      // RSS sampled per cycle
     std::vector<OcrResult> last_res;  // final cycle's OCR results
-    AlarmResult last_alarm;           // final cycle's alarm result
     int last_n_crops = 0;             // final cycle's crop count
 };
 
-// Runs the pipeline `cycles` times via the same TextSystem::run() +
-// AlarmDetector::detect() calls ocr_server.cpp uses, timing each stage and
-// sampling CPU/memory each cycle.
-CycleTotals run_cycles(const cv::Mat& img_orig, const TextSystem& text_system,
-                        const AlarmDetector& alarm_detector, int cycles) {
+// Runs the pipeline `cycles` times, timing each stage and sampling CPU/memory each cycle.
+CycleTotals run_cycles(const cv::Mat& img_orig, const TextSystem& text_system, int cycles) {
     const unsigned int nproc = std::max(1u, std::thread::hardware_concurrency());
 
     CycleTotals totals;
@@ -163,21 +156,14 @@ CycleTotals run_cycles(const cv::Mat& img_orig, const TextSystem& text_system,
         RunTiming run_timing;
         std::vector<OcrResult> results = text_system.run(img_orig, &run_timing);
 
-        auto alarm_start = std::chrono::steady_clock::now();
-        AlarmResult alarm = alarm_detector.detect(img_orig, results);
-        double alarm_ms =
-            std::chrono::duration<double, std::milli>(std::chrono::steady_clock::now() - alarm_start).count();
-
         auto wall_end = std::chrono::steady_clock::now();
 
         totals.det_mss.push_back(run_timing.det_ms);
         totals.rec_mss.push_back(run_timing.rec_ms);
-        totals.alarm_mss.push_back(alarm_ms);
 
         if (cycle == cycles - 1) {
             totals.last_n_crops = run_timing.n_crops;
             totals.last_res = results;
-            totals.last_alarm = alarm;
         }
 
         double mem_after = get_rss_mb();
@@ -215,7 +201,7 @@ int main(int argc, char** argv) {
     const int cycles = argc > 5 ? std::atoi(argv[5]) : 1;
     const double drop_score = argc > 6 ? std::atof(argv[6]) : 0.4;
     // Detection knobs are CLI-configurable so a sweep can compare values
-    // without recompiling. The defaults match api/ocr_server.cpp's production
+    // without recompiling. The defaults match legacy/ocr_server.cpp's production
     // values, so a plain run reproduces server behaviour (see there for why
     // det_thresh is 0.2).
     const float det_thresh = argc > 7 ? std::atof(argv[7]) : 0.2f;
@@ -257,11 +243,10 @@ int main(int argc, char** argv) {
     }
     TextSystem text_system(std::move(detector), std::move(recognizer),
                             drop_score, /*min_height=*/10.0, /*min_width=*/8.0);
-    AlarmDetector alarm_detector;
     printf("Models loaded.\n");
 
     printf("\nRunning %d cycle%s...\n", cycles, cycles == 1 ? "" : "s");
-    CycleTotals totals = run_cycles(img, text_system, alarm_detector, cycles);
+    CycleTotals totals = run_cycles(img, text_system, cycles);
 
     double avg_ms = mean(totals.times_ms);
     double std_ms = stddev(totals.times_ms);
@@ -269,8 +254,7 @@ int main(int argc, char** argv) {
     double avg_mem = mean(totals.mem_mbs);
     double avg_det = mean(totals.det_mss);
     double avg_rec = mean(totals.rec_mss);
-    double avg_alarm = mean(totals.alarm_mss);
-    double other_ms = avg_ms - avg_det - avg_rec - avg_alarm;
+    double other_ms = avg_ms - avg_det - avg_rec;
 
     printf("\n  RESULTS\n");
     printf("--\n");
@@ -278,7 +262,6 @@ int main(int argc, char** argv) {
     printf("    Det      : %.1f ms  (std %.1f)\n", avg_det, stddev(totals.det_mss));
     printf("    Rec      : %.1f ms  (std %.1f, %d crops)\n", avg_rec, stddev(totals.rec_mss),
             totals.last_n_crops);
-    printf("    Alarm    : %.1f ms  (std %.1f)\n", avg_alarm, stddev(totals.alarm_mss));
     printf("    Other    : %.1f ms  (sort, NMS, crop extraction)\n", other_ms);
     printf("  Avg CPU    : %.1f%%\n", avg_cpu);
     printf("  Avg memory : %.1f MB\n", avg_mem);
@@ -292,18 +275,6 @@ int main(int argc, char** argv) {
             print_box(r.box);
             printf("\n");
         }
-    }
-
-    printf("\n  Alarm detector:\n");
-    if (totals.last_alarm.alarm) {
-        printf("    ALARM at (%d,%d) %dx%d", totals.last_alarm.bbox.x, totals.last_alarm.bbox.y,
-               totals.last_alarm.bbox.width, totals.last_alarm.bbox.height);
-        if (totals.last_alarm.text.has_value()) {
-            printf(" text=\"%s\"", totals.last_alarm.text->c_str());
-        }
-        printf("\n");
-    } else {
-        printf("    no alarm detected\n");
     }
 
     return 0;
