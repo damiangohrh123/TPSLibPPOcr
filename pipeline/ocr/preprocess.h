@@ -1,7 +1,5 @@
 #pragma once
 
-#include <vector>
-
 #include <opencv2/core.hpp>
 
 // C++ port of the Python reference implementation's utils/preprocess.py.
@@ -18,7 +16,3 @@ public:
 private:
     double scale_;
 };
-
-// Flattens an HWC CV_32FC3 image into a flat float32 buffer (batch size 1),
-// the layout RknnExecutor::run() expects.
-std::vector<float> to_nhwc_batch(const cv::Mat& img);

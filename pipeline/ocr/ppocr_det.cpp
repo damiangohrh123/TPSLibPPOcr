@@ -1,6 +1,7 @@
 #include "ppocr_det.h"
 #include <algorithm>
 #include <cmath>
+#include <cstddef>
 #include <cstdio>
 #include <opencv2/imgproc.hpp>
 #include <polyclipping/clipper.hpp>
@@ -253,10 +254,10 @@ std::vector<Quad> TextDetector::run(const cv::Mat& img, int core_slot) const {
 	// Resizes the image to the model's fixed input size, recording the scale ratios.
 	ResizeResult resized = det_resize_for_test(img, kDetH, kDetW);
 	cv::Mat normalized = normalize_(resized.image);
-	std::vector<float> batch = to_nhwc_batch(normalized);
+	std::size_t n_floats = normalized.total() * static_cast<std::size_t>(normalized.channels());
 
-	// Runs the detection model on the prepared image.
-	auto outputs = model_->run(batch, core_slot);
+	// Runs the detection model straight off the normalized image's own buffer.
+	auto outputs = model_->run(normalized.ptr<float>(), n_floats, core_slot);
 	if (outputs.empty()) return {};
 
 	// Checks that the output is a single-channel probability map.

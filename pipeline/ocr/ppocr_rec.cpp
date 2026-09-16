@@ -1,6 +1,7 @@
 #include "ppocr_rec.h"
 #include <algorithm>
 #include <cmath>
+#include <cstddef>
 #include <cstdio>
 #include <fstream>
 #include <thread>
@@ -95,9 +96,9 @@ std::vector<RecResult> TextRecognizer::run(const std::vector<cv::Mat>& imgs) con
 		scaled.copyTo(padded(cv::Rect(0, 0, resized_w, kRecH)));
 
 		cv::Mat normalized = normalize_(padded);
-		std::vector<float> batch = to_nhwc_batch(normalized);
+		std::size_t n_floats = normalized.total() * static_cast<std::size_t>(normalized.channels());
 
-		auto outputs = model_->run(batch, core_slot);
+		auto outputs = model_->run(normalized.ptr<float>(), n_floats, core_slot);
 		if (outputs.empty()) {
 			results[idx] = { "", 0.0f };
 			return;

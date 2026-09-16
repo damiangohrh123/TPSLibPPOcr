@@ -75,7 +75,7 @@ bool RknnExecutor::load(const std::string& model_path, int num_cores) {
 	return true;
 }
 
-std::vector<RknnOutput> RknnExecutor::run(const std::vector<float>& input_nhwc, int core_slot) {
+std::vector<RknnOutput> RknnExecutor::run(const float* input_nhwc, std::size_t n_floats, int core_slot) {
 	if (!loaded_) {
 		fprintf(stderr, "ERROR: rknn has been released\n");
 		return {};
@@ -87,8 +87,8 @@ std::vector<RknnOutput> RknnExecutor::run(const std::vector<float>& input_nhwc, 
 	rknn_input in;
 	memset(&in, 0, sizeof(in));
 	in.index = 0;
-	in.buf = const_cast<float*>(input_nhwc.data());
-	in.size = static_cast<uint32_t>(input_nhwc.size() * sizeof(float));
+	in.buf = const_cast<float*>(input_nhwc);
+	in.size = static_cast<uint32_t>(n_floats * sizeof(float));
 	in.type = RKNN_TENSOR_FLOAT32;
 	in.fmt = RKNN_TENSOR_NHWC;
 	in.pass_through = 0;

@@ -1,5 +1,6 @@
 #pragma once
 
+#include <cstddef>
 #include <cstdint>
 #include <memory>
 #include <string>
@@ -40,7 +41,9 @@ public:
     // Runs inference on one input tensor, using the context pinned to
     // core_slot (0-based; see load()'s num_cores). Returns one RknnOutput
     // per model output, always dequantized to float32.
-    std::vector<RknnOutput> run(const std::vector<float>& input_nhwc, int core_slot = 0);
+    // Takes the buffer directly: RKNN copies it internally, so an intermediate
+    // vector would be a second copy of the whole image on every pass.
+    std::vector<RknnOutput> run(const float* input_nhwc, std::size_t n_floats, int core_slot = 0);
 
     bool is_loaded() const { return loaded_; }  // True once load() has succeeded.
 
