@@ -35,7 +35,7 @@ double polygon_perimeter(const std::vector<cv::Point2f>& points) {
 	return perimeter;
 }
 
-ResizeResult det_resize_for_test(const cv::Mat& img, int target_h, int target_w) {
+ResizeResult resize_to_det_input(const cv::Mat& img, int target_h, int target_w) {
 	ResizeResult result;
 	// Records how much each dimension is being scaled, to map coordinates back to the original image size later.
 	result.ratio_h = static_cast<float>(target_h) / img.rows;
@@ -46,7 +46,7 @@ ResizeResult det_resize_for_test(const cv::Mat& img, int target_h, int target_w)
 
 	// Splits 4 x-sorted points into left/right pairs and picks the smaller-y
 	// point in each pair as the top corner, returning tl, tr, br, bl.
-	Quad order_quad(const std::vector<cv::Point2f>& sorted_by_x) {
+	Quad order_quad(const Quad& sorted_by_x) {
 		int i1, i4;
 		if (sorted_by_x[1].y > sorted_by_x[0].y) { i1 = 0; i4 = 1; }
 		else { i1 = 1; i4 = 0; }
@@ -68,9 +68,8 @@ std::pair<Quad, float> DBPostProcess::get_mini_boxes(const std::vector<cv::Point
 	// Computes the minimum-area rotated rectangle enclosing all the points.
 	cv::RotatedRect bounding_box = cv::minAreaRect(points_in);
 
-	cv::Point2f corners[4];
-	bounding_box.points(corners);
-	std::vector<cv::Point2f> points(corners, corners + 4);
+	Quad points;
+	bounding_box.points(points.data());
 	std::sort(points.begin(), points.end(),
 		[](const cv::Point2f& a, const cv::Point2f& b) { return a.x < b.x; });  // for order_quad
 
@@ -200,7 +199,7 @@ namespace {
 
 Quad order_points_clockwise(const Quad& pts) {
 	// Sorts the 4 points by x, then reorders them into tl, tr, br, bl.
-	std::vector<cv::Point2f> sorted_by_x(pts.begin(), pts.end());
+	Quad sorted_by_x = pts;
 	std::sort(sorted_by_x.begin(), sorted_by_x.end(),
 		[](const cv::Point2f& a, const cv::Point2f& b) { return a.x < b.x; });
 	return order_quad(sorted_by_x);
@@ -252,7 +251,7 @@ std::vector<Quad> TextDetector::run(const cv::Mat& img, int core_slot) const {
 
 	int src_h = img.rows, src_w = img.cols;
 	// Resizes the image to the model's fixed input size, recording the scale ratios.
-	ResizeResult resized = det_resize_for_test(img, kDetH, kDetW);
+	ResizeResult resized = resize_to_det_input(img, kDetH, kDetW);
 	cv::Mat normalized = normalize_(resized.image);
 	std::size_t n_floats = normalized.total() * static_cast<std::size_t>(normalized.channels());
 
