@@ -1,15 +1,11 @@
 #include "preprocess.h"
 
-NormalizeImage::NormalizeImage(double scale, const std::array<double, 3>& mean, const std::array<double, 3>& std)
-	: scale_(scale), mean_(mean[0], mean[1], mean[2]), std_(std[0], std[1], std[2]) {}
+NormalizeImage::NormalizeImage(double scale) : scale_(scale) {}
 
 cv::Mat NormalizeImage::operator()(const cv::Mat& img) const {
-	cv::Mat scaled;
-	img.convertTo(scaled, CV_32FC3, scale_);
-
+	// convertTo switches to float and multiplies by scale_ in one pass
 	cv::Mat out;
-	cv::subtract(scaled, mean_, out);
-	cv::divide(out, std_, out);
+	img.convertTo(out, CV_32FC3, scale_);
 	return out;
 }
 

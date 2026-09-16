@@ -238,9 +238,8 @@ std::vector<Quad> filter_tag_det_res(const std::vector<Quad>& dt_boxes,
 TextDetector::TextDetector(const std::string& det_model_path,
 	float det_thresh, float box_thresh, float unclip_ratio, int max_candidates)
 	: model_(load_model(det_model_path, kNumCores)),
-	// Configures normalization as scale=1, mean=0, std=1 -- a no-op, since
-	// this model already has normalization baked into its weights.
-	normalize_(1.0, { 0.0, 0.0, 0.0 }, { 1.0, 1.0, 1.0 }),
+	// scale=1: this model already has normalization baked into its weights
+	normalize_(1.0),
 	db_postprocess_(det_thresh, box_thresh, max_candidates, unclip_ratio) {
 	if (!model_) {
 		fprintf(stderr, "TextDetector: failed to load model %s\n", det_model_path.c_str());
