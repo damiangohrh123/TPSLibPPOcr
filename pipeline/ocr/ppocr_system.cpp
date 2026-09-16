@@ -19,12 +19,14 @@ double ms_since(std::chrono::steady_clock::time_point start) {
 std::vector<Quad> nms_boxes(const std::vector<Quad>& boxes, double iom_threshold = 0.6) {
 	if (boxes.size() <= 1) return boxes;
 
-	// Converts each box to a point vector once (reused below), and computes its area from that.
+	// Converts each box to a point vector once (reused below), with its area and bounds.
 	std::vector<std::vector<cv::Point2f>> points(boxes.size());
 	std::vector<double> areas(boxes.size());
+	std::vector<cv::Rect> bounds(boxes.size());
 	for (size_t i = 0; i < boxes.size(); ++i) {
 		points[i].assign(boxes[i].begin(), boxes[i].end());
 		areas[i] = cv::contourArea(points[i]);
+		bounds[i] = cv::boundingRect(points[i]);
 	}
 
 	// Sort box indices by area in descending order.
@@ -34,17 +36,21 @@ std::vector<Quad> nms_boxes(const std::vector<Quad>& boxes, double iom_threshold
 
 	std::vector<bool> suppressed(boxes.size(), false);
 	std::vector<int> keep;
+	cv::Mat intersection_poly;  // unused, but required as an out-param
 	for (int i : order) {
 		if (suppressed[i]) continue;
 		keep.push_back(i);
 
+		double area_i = areas[i];
+		cv::Rect bounds_i = bounds[i];
 		for (int j : order) {
 			if (j == i || suppressed[j]) continue;
-			cv::Mat intersection_poly;  // unused, but required as an out-param
+			// Disjoint bounds mean zero intersection, which can never exceed the threshold.
+			if ((bounds_i & bounds[j]).empty()) continue;
 			float inter_area = cv::intersectConvexConvex(points[i], points[j], intersection_poly);
 
 			// Calculate overlap ratio relative to the smaller box area.
-			double iom = inter_area / (std::min(areas[i], areas[j]) + 1e-6);
+			double iom = inter_area / (std::min(area_i, areas[j]) + 1e-6);
 			if (iom > iom_threshold) suppressed[j] = true;
 		}
 	}
@@ -90,7 +96,7 @@ cv::Mat get_rotate_crop_image(const cv::Mat& img, const Quad& box) {
 	if (dst_img.cols > 0 && static_cast<double>(dst_img.rows) / dst_img.cols >= 1.5) {
 		cv::Mat rotated;
 		cv::rotate(dst_img, rotated, cv::ROTATE_90_COUNTERCLOCKWISE);
-		dst_img = rotated;
+		return rotated;
 	}
 	return dst_img;
 }
@@ -169,9 +175,12 @@ std::vector<Quad> run_det_tiled(const cv::Mat& img_det, const TextDetector& dete
 		return all_boxes;
 	}
 
+	// x spans are the same for every y, so they are built once
+	const auto x_spans = make_tile_spans(w, n_x, overlap);
 	std::vector<std::tuple<int, int, int, int>> tiles;  // x, y, tile_w, tile_h
+	tiles.reserve(static_cast<size_t>(n_x) * n_y);
 	for (const auto& [y, tile_h] : make_tile_spans(h, n_y, overlap)) {
-		for (const auto& [x, tile_w] : make_tile_spans(w, n_x, overlap)) {
+		for (const auto& [x, tile_w] : x_spans) {
 			tiles.emplace_back(x, y, tile_w, tile_h);
 		}
 	}
@@ -228,7 +237,8 @@ std::vector<OcrResult> TextSystem::run(const cv::Mat& img, RunTiming* timing) co
 
 		// Drop boxes too small to contain readable text.
 		std::vector<Quad> size_filtered;
-		for (auto& b : dt_boxes) {
+		size_filtered.reserve(dt_boxes.size());
+		for (const auto& b : dt_boxes) {
 			if (box_size_ok(b, min_height_, min_width_)) size_filtered.push_back(b);
 		}
 		dt_boxes = nms_boxes(size_filtered);
