@@ -18,8 +18,10 @@ struct RecResult {
 class CtcLabelDecode {
 public:
     // Loads the character dictionary, one UTF-8 character per line, with
-    // "blank" prepended and an optional trailing space character.
-    explicit CtcLabelDecode(const std::string& character_dict_path, bool use_space_char = true);
+    // "blank" prepended and a trailing space character appended.
+    explicit CtcLabelDecode(const std::string& character_dict_path);
+
+    bool is_loaded() const { return dict_loaded_; }  // False if the dictionary file did not open.
 
     // Picks the highest-scoring class at each timestep, then collapses
     // repeats and blanks into the final decoded text and its mean score.
@@ -27,6 +29,7 @@ public:
 
 private:
     std::vector<std::string> character_;  // index 0 is always "blank"
+    bool dict_loaded_ = false;            // whether character_dict_path actually opened
 };
 
 // Runs recognition on cropped text-box images.
@@ -35,7 +38,7 @@ public:
     TextRecognizer(const std::string& rec_model_path,
                    const std::string& character_dict_path);
 
-    bool is_loaded() const { return model_ && model_->is_loaded(); }
+    bool is_loaded() const { return model_ && model_->is_loaded() && ctc_decode_.is_loaded(); }
 
     // Resizes each crop into a 320x48 zero-padded canvas (aspect preserved),
     // normalizes it, and runs the model. Crops are split across the loaded

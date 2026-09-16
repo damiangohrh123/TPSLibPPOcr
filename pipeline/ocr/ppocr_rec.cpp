@@ -7,7 +7,7 @@
 #include <thread>
 #include <opencv2/imgproc.hpp>
 
-CtcLabelDecode::CtcLabelDecode(const std::string& character_dict_path, bool use_space_char) {
+CtcLabelDecode::CtcLabelDecode(const std::string& character_dict_path) {
 	// The blank token always comes first, before any dictionary entries.
 	character_.push_back("blank");
 
@@ -22,8 +22,9 @@ CtcLabelDecode::CtcLabelDecode(const std::string& character_dict_path, bool use_
 			if (!line.empty() && line.back() == '\r') line.pop_back();
 			character_.push_back(std::move(line));
 		}
+		dict_loaded_ = true;
 	}
-	if (use_space_char) character_.push_back(" ");
+	character_.push_back(" ");
 }
 
 RecResult CtcLabelDecode::decode(const float* preds, int seq_len, int num_classes) const {
@@ -33,23 +34,16 @@ RecResult CtcLabelDecode::decode(const float* preds, int seq_len, int num_classe
 	int prev_idx = -1;  // no previous timestep yet
 
 	for (int t = 0; t < seq_len; ++t) {
-		// Finds the highest-scoring class for this timestep.
+		// Finds the highest-scoring class for this timestep, keeping the first on ties.
 		const float* row = preds + static_cast<size_t>(t) * num_classes;
-		int best_idx = 0;
-		float best_val = row[0];
-		for (int c = 1; c < num_classes; ++c) {
-			if (row[c] > best_val) {
-				best_val = row[c];
-				best_idx = c;
-			}
-		}
+		const float* best = std::max_element(row, row + num_classes);
+		int best_idx = static_cast<int>(best - row);
+		float best_val = *best;
 
-		// Skips repeats of the previous timestep's class, and blank tokens.
-		bool is_duplicate = (t > 0 && best_idx == prev_idx);
+		// Skips repeats of the previous timestep's class, blank tokens, and out-of-range indices.
+		bool is_duplicate = (best_idx == prev_idx);
 		prev_idx = best_idx;
-		if (is_duplicate) continue;
-		if (best_idx == 0) continue;
-		if (best_idx < 0 || best_idx >= static_cast<int>(character_.size())) continue;
+		if (is_duplicate || best_idx == 0 || best_idx >= static_cast<int>(character_.size())) continue;
 
 		// Appends the surviving character and tracks its score.
 		text += character_[best_idx];
@@ -66,7 +60,7 @@ TextRecognizer::TextRecognizer(const std::string& rec_model_path,
 	: model_(load_model(rec_model_path, kNumCores)),
 	// Scales pixel values into [0,1].
 	normalize_(1.0 / 255.0),
-	ctc_decode_(character_dict_path, /*use_space_char=*/true) {
+	ctc_decode_(character_dict_path) {
 	if (!model_) {
 		fprintf(stderr, "TextRecognizer: failed to load model %s\n", rec_model_path.c_str());
 	}
