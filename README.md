@@ -2,14 +2,14 @@
 
 The RECC board reads a machine's HMI screen over HDMI. This allows the machine to be monitored, and operated when a rule matches, with no person at the controls. **System Architecture** below describes the full flow, including the parts that live outside this repo.
 
-This repo holds the production C++ implementation: PP-OCRv6 tiny detection and recognition on the Rockchip RK3588 NPU via RKNN, with alarm-banner detection over the raw OCR output. Input is raw BGR888 only, because uncompressed pixel data preserves small text better.
+This repo holds the production C++ implementation: PP-OCRv6 tiny detection and recognition on the Rockchip RK3588 NPU via RKNN. Input is raw BGR888 only, because uncompressed pixel data preserves small text better.
 
 | Component | Model | Format | Notes |
 |-----------|-------|--------|-------|
 | Det | PP-OCRv6 tiny det | INT8, 480×480 | ImageNet norm baked in; raw BGR in |
 | Rec | PP-OCRv6 tiny rec | FP16, 320×48 | `[0,1]` normalisation |
 
-Detection runs a full-image pass at the detector's fixed 480x480 input, then a grid of overlapping tiles closer to native resolution, merging both and dropping duplicates by NMS so small text survives the full-frame resize. Alarm detection converts the frame to HSV, masks for red, and filters by area, aspect ratio, and screen position; if a banner is found, it reuses the OCR text already collected for that region instead of running a second pass.
+Detection runs a full-image pass at the detector's fixed 480x480 input, then a grid of overlapping tiles closer to native resolution, merging both and dropping duplicates by NMS so small text survives the full-frame resize.
 
 ### Why There Is No Preprocessing
 
@@ -19,21 +19,21 @@ Those figures come from the `board_deploy/testdata/*.bgr888` screens, which are 
 
 ## System Architecture
 
-Nothing in this repo drives the machine. `kvmd` captures the screen, `ocr_server` turns pixels into text, and `pipeline/automation/` decides whether a rule matched. Acting on that decision, by sending keyboard and mouse input back over USB HID, is the job of `recc_gen5_test_kit/automation/`, which runs the binaries built here. The board as a whole can therefore control the machine, while this repo covers only the reading and the deciding. The HID output path is verified working on the board, though not yet against the semiconductor machine itself.
+Nothing in this repo drives the machine. `kvmd` captures the screen, the OCR pipeline turns pixels into text, and `pipeline/automation/` decides whether a rule matched. Acting on that decision, by sending keyboard and mouse input back over USB HID, is the job of `recc_gen5_test_kit/automation/`, which runs the binaries built here. The board as a whole can therefore control the machine, while this repo covers only the reading and the deciding. The HID output path is verified working on the board, though not yet against the semiconductor machine itself.
 
 Two independent services run on the board and never talk to each other directly:
 
 - **`kvmd`** captures the HDMI input from the screen. It is a separate binary from this repo (not built here). Over a TCP socket on port 39000 it serves several channels: a continuous H.264 stream for live viewing, a JPEG mode, continuous raw BGR888 (full-frame or a crop), and a one-shot raw BGR888 frame on request. Only that last one is used by the OCR loop; `recc_gen5_test_kit/test_h264_raw.py` exercises the others. It has no knowledge of OCR.
-- **`ocr_server`** (this repo) reads one frame at a time. It has no knowledge of `kvmd`; it only accepts raw BGR888 bytes over HTTP on port 8080 and returns text and alarm results.
+- **The OCR service** (this repo) reads one frame at a time. It has no knowledge of `kvmd`; it only accepts raw BGR888 bytes over HTTP on port 8080 and returns the text it read. The harness reaches OCR through it, and `legacy/README.md` covers building, deploying and running it.
 
-A driving script on the board, for example `recc_gen5_test_kit/test_ocr_continuous.py` run over SSH, calls both. It requests one frame from `kvmd`, then sends those bytes to `ocr_server`, both over localhost. The raw frame never leaves the board; only the JSON result is small enough to be worth sending on to a separate host PC. Read frequency is set entirely by whatever calls the two services, as neither polls or pushes on a schedule of its own.
+A driving script on the board, for example `recc_gen5_test_kit/test_ocr_continuous.py` run over SSH, calls both. It requests one frame from `kvmd`, then sends those bytes to the OCR service, both over localhost. The raw frame never leaves the board; only the JSON result is small enough to be worth sending on to a separate host PC. Read frequency is set entirely by whatever calls the two services, as neither polls or pushes on a schedule of its own.
 
 ```mermaid
 flowchart LR
     M[Machine HMI Screen] -- HDMI --> K["kvmd  (:39000)"]
     K -- "one-shot BGR888 frame, localhost" --> D[Driving script, on board]
-    D -- "POST /ocr, localhost" --> O["ocr_server  (:8080)"]
-    O -- "boxes + alarm JSON" --> D
+    D -- "POST /ocr, localhost" --> O["OCR service  (:8080)"]
+    O -- "boxes JSON" --> D
     D -- "JSON result, over network" --> H[Host PC]
     K -. "H.264 live stream, over network" .-> V[Viewer]
     D -. "USB HID keyboard/mouse, if a rule matched" .-> M
@@ -57,14 +57,11 @@ recc/
       json_value.cpp/h             # minimal JSON reader for /ocr responses
   api/
     json_write.cpp/h               # JSON string escaping, shared with step_matcher
-  legacy/                          # the HTTP-server era, see legacy/README.md
-    ocr_server.cpp                 # the server: loads models once, serves POST /ocr
-    http_server.cpp/h              # minimal HTTP layer over POSIX sockets
-    alarm_detector.cpp/h           # HSV-based alarm banner detection
+  legacy/                          # superseded HTTP server, see legacy/README.md
   cmake/aarch64-toolchain.cmake    # cross-compile toolchain file (see Build below)
   third_party/                     # rknn_api.h only (librknnrt.so lives on the board)
   aarch64-ubuntu20.04-toolchain.tar.gz  # cached aarch64 cross-compile toolchain (gitignored), see the section below
-  board_deploy/                    # testdata images, systemd service, sweep_det_thresholds.sh; ready to pscp to a board once built (see the section below)
+  board_deploy/                    # testdata images and sweep_det_thresholds.sh; ready to pscp to a board once built (see the section below)
   model/
     PP-OCRv6_tiny_det.onnx         # conversion source
     PP-OCRv6_tiny_rec.onnx         # conversion source
@@ -84,9 +81,9 @@ Follow these steps in order: build once, deploy to a board, run it, then install
 
 ### 1. Build
 
-`board_deploy/benchmark`, `board_deploy/ocr_server`, and `board_deploy/step_matcher` are aarch64 binaries. The first two are statically linked against OpenCV, Clipper, and zlib, leaving only `librknnrt.so` dynamic; `step_matcher` requires none of them. They are gitignored rather than committed, to keep binary blobs out of git history, so a fresh clone needs a build before first use. Rebuild only when the C++ source changes.
+The binaries in `board_deploy/` are aarch64. The first two are statically linked against OpenCV, Clipper, and zlib, leaving only `librknnrt.so` dynamic; `step_matcher` requires none of them. They are gitignored rather than committed, to keep binary blobs out of git history, so a fresh clone needs a build before first use. Rebuild only when the C++ source changes.
 
-The build produces four targets: the `ocr_core` library, `step_matcher`, and, with `-DBUILD_TOOLS=ON`, `benchmark` and `ocr_server`. Copy the three executables from `build/` into `board_deploy/` before deploying.
+The build produces four targets: the `ocr_core` library, `step_matcher`, and, with `-DBUILD_TOOLS=ON`, `benchmark` and the OCR service. Copy the executables from `build/` into `board_deploy/` before deploying.
 
 Extract the cached toolchain once:
 
@@ -126,56 +123,20 @@ New board:
    pscp -r model tpsadmin@<board-ip>:/home/tpsadmin/model
    ```
 
-2. Test manually before adding anything to systemd. Run `ocr_server` by hand (see "Run It" below) and confirm `/health` responds, or run `benchmark` against one of the `testdata/*.bgr888` files. This catches a wrong path or a missing model file in plain view, rather than inside a service that retries silently.
-3. Install it as a service (see "Run as a Service" below) so it starts on every boot and restarts itself if it crashes.
-4. Record the board's IP address wherever it needs to be reached from, such as the host PC. `ocr_server`, the models, and the service file are identical on every board; only the IP differs.
+2. Test manually before relying on it. Run `benchmark` against one of the `testdata/*.bgr888` files. This catches a wrong path or a missing model file in plain view.
+3. Record the board's IP address wherever it needs to be reached from, such as the host PC. The binaries and models are identical on every board; only the IP differs.
 
-Existing board, after a rebuild: re-upload just the changed binary and restart the service.
-
-```bash
-pscp board_deploy/ocr_server tpsadmin@192.168.1.101:/home/tpsadmin/board_deploy/ocr_server
-```
-
-Then on the board: `sudo systemctl restart ocr_server`.
-
-### 3. Run It
+Existing board, after a rebuild: re-upload just the changed binary.
 
 ```bash
-cd ~/board_deploy
-./ocr_server /home/tpsadmin/model/PP-OCRv6_tiny_det_rk3588.rknn /home/tpsadmin/model/PP-OCRv6_tiny_rec_rk3588.rknn /home/tpsadmin/model/ppocr_keys_v6.txt 8080
-```
-
-Confirm it's up:
-
-```bash
-python3 -c "import urllib.request; print(urllib.request.urlopen('http://localhost:8080/health').read())"
-```
-
-`/ocr` requires the 8-byte width and height header before the pixel bytes, so it is not a plain `curl --data-binary @file` call. See `recc_gen5_test_kit/test_ocr_continuous.py` for a working example, or the wire format under Usage below.
-
-### 4. Run as a Service (Survives Reboot)
-
-`board_deploy/ocr_server.service` is a systemd unit that starts `ocr_server` on boot and restarts it if it crashes. `kvmd` has no equivalent yet. It is backgrounded once by `kvmd_run.sh`, with no restart-on-crash supervision; giving it the same systemd treatment is a future improvement.
-
-```bash
-sudo cp ~/board_deploy/ocr_server.service /etc/systemd/system/ocr_server.service
-sudo systemctl daemon-reload
-sudo systemctl enable ocr_server
-sudo systemctl start ocr_server
-```
-
-Check status or logs:
-
-```bash
-sudo systemctl status ocr_server --no-pager
-journalctl -u ocr_server -f
+pscp board_deploy/step_matcher tpsadmin@192.168.1.101:/home/tpsadmin/board_deploy/step_matcher
 ```
 
 ## Usage
 
 ### `benchmark` (One-Shot CLI)
 
-Loads a raw `.bgr888` frame, runs detection, recognition, and alarm detection, prints the results, and reports timing, CPU, and memory. Its detection defaults match `ocr_server`'s production values (det_thresh 0.2, box_thresh 0.4, unclip_ratio 1.5, max_candidates 3000), so a plain run reproduces server behaviour. Pass alternatives positionally to sweep.
+Loads a raw `.bgr888` frame, runs detection and recognition, prints the results, and reports timing, CPU, and memory. Its detection defaults match the production values (det_thresh 0.2, box_thresh 0.4, unclip_ratio 1.5, max_candidates 3000). Pass alternatives positionally to sweep.
 
 ```bash
 cd ~/board_deploy
@@ -186,46 +147,6 @@ cd ~/board_deploy
 
 The detector's own thresholds (`det_thresh`, `box_thresh`, `unclip_ratio`, `max_candidates`) are also CLI-configurable, as optional positional args after cycles and drop_score: `... testdata/alarm_1024x768.bgr888 1 0.4 <det_thresh> <box_thresh> <unclip_ratio> <max_candidates>`. These had been hardcoded since the project's first commit, with no record of being tested against alternatives. `board_deploy/sweep_det_thresholds.sh` sweeps a small grid of them against every file in `testdata/` and logs box counts, timing, and recognized text per combination to `sweep_results.csv`. Run it from `board_deploy/` after rebuilding `benchmark`.
 
-### `ocr_server` (HTTP API)
-
-`ocr_server` (`api/`) loads the detection and recognition models once at startup, then serves OCR and alarm-detection results over HTTP, rather than once per invocation as `benchmark` does.
-
-#### `GET /health`
-
-Returns `200` with `{"status":"ok"}` once models are loaded.
-
-#### `POST /ocr`
-
-Request body: an 8-byte header followed by tightly-packed pixel data, no padding:
-
-```
-[4 bytes: width,  big-endian uint32]
-[4 bytes: height, big-endian uint32]
-[width * height * 3 bytes: BGR888 pixel data, row-major, 3 bytes/pixel]
-```
-
-This is the same byte order `kvmd`'s raw channel uses for its width, height, and size fields, so a client that already speaks that protocol, such as `recc_gen5_test_kit/test_ocr_continuous.py`, needs no second convention for this endpoint.
-
-Response `200`:
-
-```json
-{
-  "boxes": [
-    { "text": "ALARM 0089", "score": 0.97, "box": [[102,18],[210,18],[210,40],[102,40]] }
-  ],
-  "alarm": {
-    "detected": true,
-    "bbox": [80, 10, 900, 60],
-    "text": "ALARM 0089 Kerf check: off center Z-EN"
-  },
-  "timing_ms": 412.3
-}
-```
-
-`alarm` is always present. The `bbox` and `text` fields inside it appear only when `detected` is `true`. `boxes` holds the same per-box text, score, and quad data `benchmark` prints, serialized as JSON.
-
-Response `400` if the body is too short, or if its size does not match `8 + width*height*3` for the given width and height. The body is `{"error": "..."}` describing the mismatch.
-
 ## Rule-Based Automation (Prototype)
 
 `pipeline/automation/` matches a person-written rule against real OCR output. A rule is a list of steps, each carrying the box a person drew around what it acts on and one of three actions: `click`, `type` or `halt`. Keyword matching is fuzzy, compared word by word against a run of the keyword's own length, at a 0.75 threshold. It never touches an image, only the text and coordinates OCR has already produced. Unlike the rest of `pipeline/`, it has no OpenCV or RKNN dependency and is not gated behind `BUILD_TOOLS` or a cross-compile toolchain, so it builds on any machine with a C++17 compiler:
@@ -235,13 +156,6 @@ cmake --build build --target step_matcher
 ```
 
 Its single binary, `step_matcher`, checks one rule step against one screen file and prints the match as JSON. It is driven by `recc_gen5_test_kit/automation/`, which reads the screen live and can send real USB HID input. The driver's `--dry-run --replay` mode performs the same check against a saved screen without touching hardware. See that folder's README for what is tested, including the USB gadget setup HID output depends on, and for the captured screen and rule files it runs against.
-
-## Current Limitations
-
-- One request is handled at a time, on the calling thread. There is no concurrency.
-- No keep-alive, chunked encoding, or HTTPS. Every request opens a new connection.
-- No authentication. Anyone who can reach the port can call it.
-- The HTTP layer (`http_server.h/.cpp`) is a small implementation over POSIX sockets, not a vendored library.
 
 ## Environment
 
