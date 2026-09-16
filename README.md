@@ -9,7 +9,7 @@ This repo holds the production C++ implementation: PP-OCRv6 tiny detection and r
 | Det | PP-OCRv6 tiny det | INT8, 480×480 | ImageNet norm baked in; raw BGR in |
 | Rec | PP-OCRv6 tiny rec | FP16, 320×48 | `[0,1]` normalisation |
 
-Detection runs a single full-image pass at the detector's native 480x480 input. Alarm detection converts the frame to HSV, masks for red, and filters by area, aspect ratio, and screen position; if a banner is found, it reuses the OCR text already collected for that region instead of running a second pass.
+Detection runs a full-image pass at the detector's fixed 480x480 input, then a grid of overlapping tiles closer to native resolution, merging both and dropping duplicates by NMS so small text survives the full-frame resize. Alarm detection converts the frame to HSV, masks for red, and filters by area, aspect ratio, and screen position; if a banner is found, it reuses the OCR text already collected for that region instead of running a second pass.
 
 ### Why There Is No Preprocessing
 
@@ -19,7 +19,7 @@ Those figures come from the `board_deploy/testdata/*.bgr888` screens, which are 
 
 ## System Architecture
 
-Nothing in this repo drives the machine. `kvmd` captures the screen, `ocr_server` turns pixels into text, and `pipeline/automation/` decides whether a rule matched. Acting on that decision, by sending keyboard and mouse input back over USB HID, is the job of `recc_gen5_test_kit/automation_driver/`, which runs the binaries built here. The board as a whole can therefore control the machine, while this repo covers only the reading and the deciding. The HID output path is verified working on the board, though not yet against the semiconductor machine itself.
+Nothing in this repo drives the machine. `kvmd` captures the screen, `ocr_server` turns pixels into text, and `pipeline/automation/` decides whether a rule matched. Acting on that decision, by sending keyboard and mouse input back over USB HID, is the job of `recc_gen5_test_kit/automation/`, which runs the binaries built here. The board as a whole can therefore control the machine, while this repo covers only the reading and the deciding. The HID output path is verified working on the board, though not yet against the semiconductor machine itself.
 
 Two independent services run on the board and never talk to each other directly:
 
@@ -227,13 +227,13 @@ Response `400` if the body is too short, or if its size does not match `8 + widt
 
 ## Rule-Based Automation (Prototype)
 
-`pipeline/automation/` matches a person-written rule, meaning a keyword to look for and an action to take once it is found, against real OCR output using fuzzy keyword matching. It never touches an image, only the text and coordinates OCR has already produced. Unlike the rest of `pipeline/`, it has no OpenCV or RKNN dependency and is not gated behind `BUILD_TOOLS` or a cross-compile toolchain, so it builds on any machine with a C++17 compiler:
+`pipeline/automation/` matches a person-written rule against real OCR output. A rule is a list of steps, each carrying the box a person drew around what it acts on and one of three actions: `click`, `type` or `halt`. Keyword matching is fuzzy, compared word by word against a run of the keyword's own length, at a 0.75 threshold. It never touches an image, only the text and coordinates OCR has already produced. Unlike the rest of `pipeline/`, it has no OpenCV or RKNN dependency and is not gated behind `BUILD_TOOLS` or a cross-compile toolchain, so it builds on any machine with a C++17 compiler:
 
 ```bash
 cmake --build build --target step_matcher
 ```
 
-Its single binary, `step_matcher`, checks one rule step against one screen file and prints the match as JSON. It is driven by `recc_gen5_test_kit/automation_driver/`, which reads the screen live and can send real USB HID input. The driver's `--dry-run --replay` mode performs the same check against a saved screen without touching hardware. See that folder's README for what is tested, including the USB gadget setup HID output depends on, and `recc_gen5_test_kit/automation_poc/` for the captured screen and rule files it runs against.
+Its single binary, `step_matcher`, checks one rule step against one screen file and prints the match as JSON. It is driven by `recc_gen5_test_kit/automation/`, which reads the screen live and can send real USB HID input. The driver's `--dry-run --replay` mode performs the same check against a saved screen without touching hardware. See that folder's README for what is tested, including the USB gadget setup HID output depends on, and for the captured screen and rule files it runs against.
 
 ## Current Limitations
 

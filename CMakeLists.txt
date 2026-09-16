@@ -56,7 +56,7 @@ endif()
 # this logic never touches an image, only the text and coordinates OCR
 # already produced, so it builds and runs on any machine and isn't gated
 # behind BUILD_TOOLS like the RKNN-dependent targets below. Driven live by
-# recc_gen5_test_kit/automation_driver/, which also replays saved screens
+# recc_gen5_test_kit/automation/, which also replays saved screens
 # offline via its --dry-run --replay mode.
 add_executable(step_matcher
     pipeline/automation/step_matcher.cpp

@@ -1,5 +1,6 @@
 #include "rule_matcher.h"
 #include <algorithm>
+#include <cctype>
 #include <unordered_map>
 
 namespace {
@@ -67,23 +68,114 @@ double sequence_ratio(const std::string& a, const std::string& b) {
     return 2.0 * matches / total_len;
 }
 
+// Splits on anything that is not a letter or digit, so punctuation, hyphens
+// and the newlines between boxes are all just separators.
+std::vector<std::string> words_of(const std::string& s) {
+    std::vector<std::string> words;
+    std::string current;
+    for (unsigned char c : s) {
+        if (std::isalnum(c)) {
+            current += static_cast<char>(c);
+        } else if (!current.empty()) {
+            words.push_back(current);
+            current.clear();
+        }
+    }
+    if (!current.empty()) words.push_back(current);
+    return words;
+}
+
+std::string join(const std::vector<std::string>& words, std::size_t start, std::size_t count) {
+    std::string out;
+    for (std::size_t i = 0; i < count; ++i) {
+        if (i != 0) out += ' ';
+        out += words[start + i];
+    }
+    return out;
+}
+
+std::vector<std::string> lower_all(const std::vector<std::string>& words) {
+    std::vector<std::string> out(words.size());
+    std::transform(words.begin(), words.end(), out.begin(), to_lower);
+    return out;
+}
+
+// Best score for the keyword's words against any run of the same length in the
+// document's words, and the run that produced it. Sizing the comparison to the
+// keyword's own length is what keeps a short keyword from being diluted by a
+// long line of surrounding text. An identical run scores 1.0 without being
+// compared character by character.
+KeywordMatch best_window(const std::vector<std::string>& kw_words,
+                          const std::vector<std::string>& doc_words,
+                          const std::vector<std::string>& doc_lower) {
+    KeywordMatch best;
+    if (kw_words.empty() || kw_words.size() > doc_lower.size()) return best;
+    std::string kw_joined = join(kw_words, 0, kw_words.size());
+    for (std::size_t start = 0; start + kw_words.size() <= doc_lower.size(); ++start) {
+        std::string window = join(doc_lower, start, kw_words.size());
+        double score = (window == kw_joined) ? 1.0 : sequence_ratio(window, kw_joined);
+        if (score > best.score) {
+            best.score = score;
+            best.text = join(doc_words, start, kw_words.size());
+        }
+        if (best.score == 1.0) break;
+    }
+    return best;
+}
+
 }  // namespace
 
+bool overlaps(const DetectedBox& b, const Region& region) {
+    // bounds taken across all four corners: a tilted box's corner 0 is not necessarily its left edge
+    int bx0 = b.box[0][0], bx1 = b.box[0][0];
+    int by0 = b.box[0][1], by1 = b.box[0][1];
+    for (const auto& p : b.box) {
+        bx0 = std::min(bx0, p[0]);
+        bx1 = std::max(bx1, p[0]);
+        by0 = std::min(by0, p[1]);
+        by1 = std::max(by1, p[1]);
+    }
+    return bx0 < region.x + region.w && bx1 > region.x &&
+           by0 < region.y + region.h && by1 > region.y;
+}
+
 std::pair<const DetectedBox*, double> find_by_keyword(const std::string& keyword,
-                                                       const std::vector<DetectedBox>& boxes) {
+                                                       const std::vector<DetectedBox>& boxes,
+                                                       const Region& region) {
     const DetectedBox* best = nullptr;
     double best_score = 0.0;
-    std::string kw_lower = to_lower(keyword);
+    std::vector<std::string> kw_words = words_of(to_lower(keyword));
     for (const auto& b : boxes) {
-        std::string text_lower = to_lower(b.text);
-        double score = sequence_ratio(kw_lower, text_lower);
-        if (text_lower.find(kw_lower) != std::string::npos) score += 0.3;
-        if (score > best_score) {
-            best_score = score;
+        if (!overlaps(b, region)) continue;
+        std::vector<std::string> doc_words = words_of(b.text);
+        KeywordMatch m = best_window(kw_words, doc_words, lower_all(doc_words));
+        if (m.score > best_score) {
+            best_score = m.score;
             best = &b;
         }
     }
     return {best, best_score};
+}
+
+KeywordMatch find_keyword_in_region(const std::vector<std::string>& keywords,
+                                     const std::vector<DetectedBox>& boxes,
+                                     const Region& region) {
+    std::string joined;
+    for (const auto& b : boxes) {
+        if (!overlaps(b, region)) continue;
+        if (!joined.empty()) joined += '\n';
+        joined += b.text;
+    }
+    std::vector<std::string> doc_words = words_of(joined);
+    std::vector<std::string> doc_lower = lower_all(doc_words);
+
+    KeywordMatch best;
+    for (const auto& kw : keywords) {
+        KeywordMatch m = best_window(words_of(to_lower(kw)), doc_words, doc_lower);
+        if (m.score > best.score) best = m;
+        if (best.score == 1.0) break;
+    }
+    return best;
 }
 
 std::pair<int, int> box_center(const std::array<std::array<int, 2>, 4>& box) {
@@ -95,20 +187,6 @@ std::pair<int, int> box_center(const std::array<std::array<int, 2>, 4>& box) {
     return {sx / 4, sy / 4};
 }
 
-std::pair<int, int> find_field_near_label(const DetectedBox& label_box,
-                                           const std::vector<DetectedBox>& boxes) {
-    int lx1 = label_box.box[1][0];
-    int ly_center = (label_box.box[0][1] + label_box.box[2][1]) / 2;
-    int candidate_x = lx1 + 20;
-    for (const auto& b : boxes) {
-        if (&b == &label_box) continue;
-        int bx0 = b.box[0][0];
-        int bx1 = b.box[1][0];
-        int by0 = b.box[0][1];
-        int by1 = b.box[2][1];
-        if (bx0 <= candidate_x && candidate_x <= bx1 && by0 <= ly_center && ly_center <= by1) {
-            candidate_x = bx1 + 20;
-        }
-    }
-    return {candidate_x, ly_center};
+std::pair<int, int> region_center(const Region& region) {
+    return {region.x + region.w / 2, region.y + region.h / 2};
 }

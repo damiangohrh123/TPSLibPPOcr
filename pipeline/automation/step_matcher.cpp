@@ -1,23 +1,28 @@
 // Checks ONE rule step against ONE freshly captured screen and prints the
 // result as a single line of JSON. Meant to be invoked once per live
 // cycle by a driver that re-reads the screen between steps (see
-// recc_gen5_test_kit/automation_driver/README.md) -- a real machine's
+// recc_gen5_test_kit/automation/README.md) -- a real machine's
 // screen changes after every action, so live execution has to re-check
 // one step at a time against a fresh read, rather than matching a whole
 // rule against one saved screen in a single shot.
 //
-// This deliberately reuses find_by_keyword/box_center/find_field_near_label
-// from rule_matcher.cpp unchanged -- the fuzzy matching itself is exactly
-// what was already demonstrated against real board data; only *when* it's
-// called changes here, not *how* it matches.
+// Every step carries the box a person drew when it was authored, already
+// scaled to the live frame by the driver. Only text overlapping that box is
+// considered, which is what separates the intended match from an identical
+// label elsewhere on the screen.
 //
-// Usage: step_matcher <screen.json> <keyword> <action> [value]
-//   action is "click" or "type" (value is the text to type, required for "type")
+// Usage: step_matcher <screen.json> <action> <x> <y> <w> <h> [keyword ...]
+//   click  one keyword; the best-matching box inside the region is clicked
+//   halt   one or more keywords, compared word by word across the region's
+//          whole text, so a phrase OCR split across two boxes still matches
+//   type   no keyword; returns the region's center to type into, and the text
+//          currently in it, which the driver compares against what it wrote
 //
 // Prints one line of JSON, e.g.:
 //   {"matched":true,"confidence":0.84,"best_text":"0089 Kerf check: off center","action":"click","x":296,"y":69}
 //   {"matched":false,"confidence":0.67,"best_text":"sTOAT","action":"click"}
 #include <cstdio>
+#include <cstdlib>
 #include <stdexcept>
 #include <string>
 #include <vector>
@@ -51,25 +56,41 @@ std::vector<DetectedBox> load_screen(const std::string& path) {
     return boxes;
 }
 
+// The text of every box overlapping the region, joined in reading order. A
+// type step compares this against the value it wrote.
+std::string region_text(const std::vector<DetectedBox>& boxes, const Region& region) {
+    std::string out;
+    for (const auto& b : boxes) {
+        if (!overlaps(b, region)) continue;
+        if (!out.empty()) out += ' ';
+        out += b.text;
+    }
+    return out;
+}
+
 // The accept/reject decision for one step lives here: rule_matcher.cpp's
-// find_by_keyword returns a raw score and leaves the threshold to its caller.
+// matchers return a raw score and leave the threshold to their caller.
 // automation_driver.py mirrors this value for log messages only.
 constexpr double kConfidenceThreshold = 0.75;
 
 }  // namespace
 
 int main(int argc, char** argv) {
-    if (argc < 4) {
-        fprintf(stderr, "usage: %s <screen.json> <keyword> <action> [value]\n", argv[0]);
+    if (argc < 7) {
+        fprintf(stderr, "usage: %s <screen.json> <action> <x> <y> <w> <h> [keyword ...]\n", argv[0]);
         return 2;
     }
     const std::string screen_path = argv[1];
-    const std::string keyword = argv[2];
-    const std::string action = argv[3];
-    const std::string value = argc > 4 ? argv[4] : "";
+    const std::string action = argv[2];
+    Region region{std::atoi(argv[3]), std::atoi(argv[4]), std::atoi(argv[5]), std::atoi(argv[6])};
+    std::vector<std::string> keywords(argv + 7, argv + argc);
 
-    if (action != "click" && action != "type") {
-        fprintf(stderr, "unrecognized action %s (expected \"click\" or \"type\")\n", action.c_str());
+    if (action != "click" && action != "type" && action != "halt") {
+        fprintf(stderr, "unrecognized action %s (expected \"click\", \"type\" or \"halt\")\n", action.c_str());
+        return 2;
+    }
+    if (action != "type" && keywords.empty()) {
+        fprintf(stderr, "action %s needs at least one keyword\n", action.c_str());
         return 2;
     }
 
@@ -81,21 +102,28 @@ int main(int argc, char** argv) {
         return 1;
     }
 
-    auto [match, score] = find_by_keyword(keyword, boxes);
-    const std::string best_text = match ? match->text : "";
+    if (action == "type") {
+        auto [cx, cy] = region_center(region);
+        printf("{\"matched\":true,\"confidence\":1.0000,\"best_text\":\"%s\",\"action\":\"type\",\"x\":%d,\"y\":%d}\n",
+               json_escape(region_text(boxes, region)).c_str(), cx, cy);
+        return 0;
+    }
+
+    if (action == "halt") {
+        KeywordMatch m = find_keyword_in_region(keywords, boxes, region);
+        printf("{\"matched\":%s,\"confidence\":%.4f,\"best_text\":\"%s\",\"action\":\"halt\"}\n",
+               m.score >= kConfidenceThreshold ? "true" : "false", m.score,
+               json_escape(m.text).c_str());
+        return 0;
+    }
+
+    auto [match, score] = find_by_keyword(keywords[0], boxes, region);
     const bool matched = (match != nullptr && score >= kConfidenceThreshold);
-
-    printf("{\"matched\":%s,\"confidence\":%.4f,\"best_text\":\"%s\",\"action\":\"%s\"",
-           matched ? "true" : "false", score, json_escape(best_text).c_str(), action.c_str());
-
+    printf("{\"matched\":%s,\"confidence\":%.4f,\"best_text\":\"%s\",\"action\":\"click\"",
+           matched ? "true" : "false", score, json_escape(match ? match->text : "").c_str());
     if (matched) {
-        if (action == "click") {
-            auto [cx, cy] = box_center(match->box);
-            printf(",\"x\":%d,\"y\":%d", cx, cy);
-        } else {  // "type"
-            auto [x, y] = find_field_near_label(*match, boxes);
-            printf(",\"x\":%d,\"y\":%d,\"text\":\"%s\"", x, y, json_escape(value).c_str());
-        }
+        auto [cx, cy] = box_center(match->box);
+        printf(",\"x\":%d,\"y\":%d", cx, cy);
     }
     printf("}\n");
     return 0;
