@@ -44,22 +44,23 @@ flowchart LR
 ```
 recc/
   pipeline/                        # the two-stage OCR + decision/control system
-    ocr/                           # Stage 1: OCR + alarm detection pipeline
+    ocr/                           # Stage 1: the OCR pipeline
       benchmark.cpp                # one-shot CLI tool; reports timing/CPU/memory (averaged over cycles)
       ppocr_det.cpp/h              # detection
       ppocr_rec.cpp/h              # recognition
       ppocr_system.cpp/h           # det + rec pipeline, NMS
-      alarm_detector.cpp/h         # HSV-based alarm banner detection
       rknn_executor.cpp/h          # low-level RKNN model runner
       preprocess.cpp/h             # normalisation shared by both models
     automation/                    # Stage 2: rule matching (see "Rule-Based Automation" below)
       step_matcher.cpp             # CLI: one rule step vs one screen -> JSON match
       rule_matcher.cpp/h           # the fuzzy keyword matcher itself
       json_value.cpp/h             # minimal JSON reader for /ocr responses
-  api/                             # Internal OCR API (see "ocr_server (HTTP API)" below)
+  api/
+    json_write.cpp/h               # JSON string escaping, shared with step_matcher
+  legacy/                          # the HTTP-server era, see legacy/README.md
     ocr_server.cpp                 # the server: loads models once, serves POST /ocr
     http_server.cpp/h              # minimal HTTP layer over POSIX sockets
-    json_write.cpp/h               # JSON string escaping, shared with step_matcher
+    alarm_detector.cpp/h           # HSV-based alarm banner detection
   cmake/aarch64-toolchain.cmake    # cross-compile toolchain file (see Build below)
   third_party/                     # rknn_api.h only (librknnrt.so lives on the board)
   aarch64-ubuntu20.04-toolchain.tar.gz  # cached aarch64 cross-compile toolchain (gitignored), see the section below

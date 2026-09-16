@@ -9,8 +9,8 @@
 #include <sstream>
 #include <vector>
 #include <opencv2/core.hpp>
-#include "pipeline/ocr/alarm_detector.h"
-#include "api/http_server.h"
+#include "legacy/alarm_detector.h"
+#include "legacy/http_server.h"
 #include "api/json_write.h"
 #include "pipeline/ocr/ppocr_det.h"
 #include "pipeline/ocr/ppocr_rec.h"

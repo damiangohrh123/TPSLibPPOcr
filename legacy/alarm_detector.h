@@ -4,7 +4,7 @@
 #include <utility>
 #include <vector>
 #include <opencv2/core.hpp>
-#include "ppocr_system.h"
+#include "pipeline/ocr/ppocr_system.h"
 
 // C++ port of the Python reference implementation's alarm_detector.py.
 

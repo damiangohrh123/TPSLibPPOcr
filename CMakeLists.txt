@@ -19,7 +19,7 @@ include_directories(
 )
 link_directories(${OPENCV_LIB_DIR} ${CLIPPER_LIB_DIR} ${ZLIB_LIB_DIR})
 
-# ocr_core: the OCR logic (detector, recognizer, alarm detector, and
+# ocr_core: the OCR logic (detector, recognizer, and
 # shared helpers) as a static library, not a runnable program.
 add_library(ocr_core STATIC
     pipeline/ocr/rknn_executor.cpp
@@ -27,7 +27,6 @@ add_library(ocr_core STATIC
     pipeline/ocr/ppocr_det.cpp
     pipeline/ocr/ppocr_rec.cpp
     pipeline/ocr/ppocr_system.cpp
-    pipeline/ocr/alarm_detector.cpp
 )
 
 target_include_directories(ocr_core PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
@@ -82,13 +81,12 @@ if(BUILD_TOOLS)
     target_link_libraries(benchmark PRIVATE ocr_core)
     target_link_options(benchmark PRIVATE -Wl,--allow-shlib-undefined)
 
-    # Internal OCR API server: same OCR + alarm pipeline as `benchmark`, kept
-    # resident and served over a minimal HTTP interface instead of run once
-    # against a single file. See the "Usage > ocr_server (HTTP API)"
-    # section of the top-level README.md for the request/response contract.
+    # ocr_server: the HTTP front end in legacy/, kept because the Python test kit reaches
+    # OCR through it. Production calls the library directly instead; see legacy/README.md.
     add_executable(ocr_server
-        api/ocr_server.cpp
-        api/http_server.cpp
+        legacy/ocr_server.cpp
+        legacy/http_server.cpp
+        legacy/alarm_detector.cpp
         api/json_write.cpp
     )
     target_link_libraries(ocr_server PRIVATE ocr_core)
