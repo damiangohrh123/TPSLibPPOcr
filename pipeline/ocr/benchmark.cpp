@@ -131,15 +131,17 @@ double stddev(const std::vector<double>& v) {
 }
 
 // Per-cycle timing/resource samples, plus the last cycle's OCR + alarm results.
+// Every stage is sampled per cycle so its mean is comparable with times_ms; taking one
+// cycle's stage times against an average over all of them leaves a meaningless remainder.
 struct CycleTotals {
     std::vector<double> times_ms;     // wall-clock time per cycle (det+rec+alarm+bookkeeping)
+    std::vector<double> det_mss;      // detection time per cycle
+    std::vector<double> rec_mss;      // recognition time per cycle
+    std::vector<double> alarm_mss;    // alarm-detection time per cycle
     std::vector<double> cpu_pcts;     // CPU% estimate per cycle
     std::vector<double> mem_mbs;      // RSS sampled per cycle
     std::vector<OcrResult> last_res;  // final cycle's OCR results
     AlarmResult last_alarm;           // final cycle's alarm result
-    double last_det_ms = 0;           // final cycle's detection time
-    double last_rec_ms = 0;           // final cycle's recognition time
-    double last_alarm_ms = 0;         // final cycle's alarm-detection time
     int last_n_crops = 0;             // final cycle's crop count
 };
 
@@ -168,10 +170,11 @@ CycleTotals run_cycles(const cv::Mat& img_orig, const TextSystem& text_system,
 
         auto wall_end = std::chrono::steady_clock::now();
 
+        totals.det_mss.push_back(run_timing.det_ms);
+        totals.rec_mss.push_back(run_timing.rec_ms);
+        totals.alarm_mss.push_back(alarm_ms);
+
         if (cycle == cycles - 1) {
-            totals.last_det_ms = run_timing.det_ms;
-            totals.last_rec_ms = run_timing.rec_ms;
-            totals.last_alarm_ms = alarm_ms;
             totals.last_n_crops = run_timing.n_crops;
             totals.last_res = results;
             totals.last_alarm = alarm;
@@ -264,14 +267,18 @@ int main(int argc, char** argv) {
     double std_ms = stddev(totals.times_ms);
     double avg_cpu = mean(totals.cpu_pcts);
     double avg_mem = mean(totals.mem_mbs);
-    double other_ms = avg_ms - totals.last_det_ms - totals.last_rec_ms - totals.last_alarm_ms;
+    double avg_det = mean(totals.det_mss);
+    double avg_rec = mean(totals.rec_mss);
+    double avg_alarm = mean(totals.alarm_mss);
+    double other_ms = avg_ms - avg_det - avg_rec - avg_alarm;
 
     printf("\n  RESULTS\n");
     printf("--\n");
     printf("  Avg time   : %.1f ms  (std %.1f)\n", avg_ms, std_ms);
-    printf("    Det      : %.1f ms\n", totals.last_det_ms);
-    printf("    Rec      : %.1f ms  (%d crops)\n", totals.last_rec_ms, totals.last_n_crops);
-    printf("    Alarm    : %.1f ms\n", totals.last_alarm_ms);
+    printf("    Det      : %.1f ms  (std %.1f)\n", avg_det, stddev(totals.det_mss));
+    printf("    Rec      : %.1f ms  (std %.1f, %d crops)\n", avg_rec, stddev(totals.rec_mss),
+            totals.last_n_crops);
+    printf("    Alarm    : %.1f ms  (std %.1f)\n", avg_alarm, stddev(totals.alarm_mss));
     printf("    Other    : %.1f ms  (sort, NMS, crop extraction)\n", other_ms);
     printf("  Avg CPU    : %.1f%%\n", avg_cpu);
     printf("  Avg memory : %.1f MB\n", avg_mem);
