@@ -200,10 +200,8 @@ int main(int argc, char** argv) {
     const std::string image_path = argv[4];
     const int cycles = argc > 5 ? std::atoi(argv[5]) : 1;
     const double drop_score = argc > 6 ? std::atof(argv[6]) : 0.4;
-    // Detection knobs are CLI-configurable so a sweep can compare values
-    // without recompiling. The defaults match legacy/ocr_server.cpp's production
-    // values, so a plain run reproduces server behaviour (see there for why
-    // det_thresh is 0.2).
+    // Detection knobs are CLI-configurable so a sweep can compare values without recompiling.
+    // det_thresh 0.2 beat 0.3 (82.5% vs 80.7%, 394 fields on 5 screens; Automation_Pipeline.docx Appendix C).
     const float det_thresh = argc > 7 ? std::atof(argv[7]) : 0.2f;
     const float box_thresh = argc > 8 ? std::atof(argv[8]) : 0.4f;
     const float unclip_ratio = argc > 9 ? std::atof(argv[9]) : 1.5f;

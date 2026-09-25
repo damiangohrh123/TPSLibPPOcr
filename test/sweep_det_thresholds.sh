@@ -1,12 +1,12 @@
 #!/bin/bash
 # Sweeps benchmark's detection thresholds (det_thresh, box_thresh,
-# unclip_ratio) across a small grid, against every image in testdata/,
-# and logs box counts + recognized text + timing for each combination to
-# a CSV. Run this on the board, from board_deploy/, after rebuilding
-# benchmark (see recc/pipeline/ocr/benchmark.cpp for the positional arg order).
+# unclip_ratio) across a small grid, against the 1024-wide test images in
+# this folder, and logs box counts + recognized text + timing for each
+# combination to a CSV. Run this on the board, from ~/test, with benchmark
+# copied in (see ocr/benchmark.cpp for the positional arg order).
 #
 # This sweep has already been run once: det_thresh 0.2 beat the old 0.3
-# (see the default in pipeline/ocr/benchmark.cpp, and Appendix C of
+# (see the default in ocr/benchmark.cpp, and Appendix C of
 # documentation/Automation_Pipeline.docx). Kept for re-running after a model
 # or screen-layout change. max_candidates stays at its default (3000); it
 # only matters on a very cluttered screen.
@@ -21,11 +21,11 @@ REC_MODEL="/home/tpsadmin/model/PP-OCRv6_tiny_rec_rk3588.rknn"
 CHAR_DICT="/home/tpsadmin/model/ppocr_keys_v6.txt"
 
 IMAGES=(
-    "testdata/alarm_1024x768.bgr888"
-    "testdata/auto_mode_1_1024x768.bgr888"
-    "testdata/auto_mode_2_1024x768.bgr888"
-    "testdata/normal_run_1024x768.bgr888"
-    "testdata/full_test_1024x384.bgr888"
+    "alarm_1024x768.bgr888"
+    "auto_mode_1_1024x768.bgr888"
+    "auto_mode_2_1024x768.bgr888"
+    "normal_run_1024x768.bgr888"
+    "full_test_1024x384.bgr888"
 )
 
 DET_THRESHOLDS=(0.2 0.3 0.4)

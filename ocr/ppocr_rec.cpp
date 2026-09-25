@@ -73,9 +73,9 @@ std::vector<RecResult> TextRecognizer::run(const std::vector<cv::Mat>& imgs) con
 	// Resizes, normalizes, and recognizes one crop, writing into its slot.
 	auto process_one = [&](size_t idx, int core_slot) {
 		// Matches PaddleOCR's RecResizeImg (padding=True, its default), which is
-		// what the model was fine-tuned against (see
-		// recc_gen5_test_kit/finetune/PP-OCRv6_tiny_rec_finetune.yml's Eval
-		// transform): scale to kRecH preserving aspect ratio, cap at kRecW, then
+		// what the model was fine-tuned against (see the Eval transform in
+		// PP-OCRv6_tiny_rec_finetune.yml, the fine-tuning config):
+		// scale to kRecH preserving aspect ratio, cap at kRecW, then
 		// zero-pad the remaining width -- never stretch. The old plain cv::resize
 		// squeezed short tokens (aspect ~1.2) about 5.6x narrower than the
 		// model's native 6.67 (320/48).

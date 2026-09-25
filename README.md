@@ -1,8 +1,6 @@
-# OCR Pipeline (RK3588 / RECC)
+# TPSLibPPOcr: OCR for the RECC Board (RK3588)
 
-The RECC board reads a machine's HMI screen over HDMI. This allows the machine to be monitored, and operated when a rule matches, with no person at the controls. **System Architecture** below describes the full flow, including the parts that live outside this repo.
-
-This repo holds the production C++ implementation: PP-OCRv6 tiny detection and recognition on the Rockchip RK3588 NPU via RKNN. Input is raw BGR888 only, because uncompressed pixel data preserves small text better.
+This repo turns one image of a machine's HMI screen into text: PP-OCRv6 tiny detection and recognition on the Rockchip RK3588 NPU via RKNN. An image goes in, and each piece of text found comes out with its position and confidence. Input is raw BGR888 only, because uncompressed pixel data preserves small text better.
 
 | Component | Model | Format | Notes |
 |-----------|-------|--------|-------|
@@ -15,53 +13,27 @@ Detection runs a full-image pass at the detector's fixed 480x480 input, then a g
 
 Preprocessing was tested on both stages and dropped. Binarization and upscaling made detection worse, so detection runs on unprocessed input. CLAHE contrast enhancement and unsharp-mask sharpening, applied to each crop before resizing, hurt recognition accuracy on every test screen: the 82.5% baseline fell to 59.6% with CLAHE and 77.4% with sharpening. Recognition therefore also runs on unprocessed crops.
 
-Those figures come from the `board_deploy/testdata/*.bgr888` screens, which are screenshots of machine displays supplied for testing rather than frames captured through `kvmd` over HDMI. They are the right input for comparing options against each other, since every option sees identical pixels, but the absolute numbers are not production-path figures: a real HDMI capture goes through the machine's video output and the board's HDMI receiver first. Nothing has yet been measured on a real HDMI capture of a real machine.
+Those figures come from the `test/*.bgr888` screens, which are screenshots of machine displays supplied for testing rather than frames captured from a machine over HDMI. They are the right input for comparing options against each other, since every option sees identical pixels, but the absolute numbers are not production-path figures: a real HDMI capture goes through the machine's video output and the board's HDMI receiver first. Nothing has yet been measured on a real HDMI capture of a real machine.
 
-## System Architecture
+## Production Use
 
-Nothing in this repo drives the machine. `kvmd` captures the screen, the OCR pipeline turns pixels into text, and `pipeline/automation/` decides whether a rule matched. Acting on that decision, by sending keyboard and mouse input back over USB HID, is the job of `recc_gen5_test_kit/automation/`, which runs the binaries built here. The board as a whole can therefore control the machine, while this repo covers only the reading and the deciding. The HID output path is verified working on the board, though not yet against the semiconductor machine itself.
-
-Two independent services run on the board and never talk to each other directly:
-
-- **`kvmd`** captures the HDMI input from the screen. It is a separate binary from this repo (not built here). Over a TCP socket on port 39000 it serves several channels: a continuous H.264 stream for live viewing, a JPEG mode, continuous raw BGR888 (full-frame or a crop), and a one-shot raw BGR888 frame on request. Only that last one is used by the OCR loop; `recc_gen5_test_kit/test_h264_raw.py` exercises the others. It has no knowledge of OCR.
-- **The OCR service** (this repo) reads one frame at a time. It has no knowledge of `kvmd`; it only accepts raw BGR888 bytes over HTTP on port 8080 and returns the text it read. The harness reaches OCR through it, and `legacy/README.md` covers building, deploying and running it.
-
-A driving script on the board, for example `recc_gen5_test_kit/test_ocr_continuous.py` run over SSH, calls both. It requests one frame from `kvmd`, then sends those bytes to the OCR service, both over localhost. The raw frame never leaves the board; only the JSON result is small enough to be worth sending on to a separate host PC. Read frequency is set entirely by whatever calls the two services, as neither polls or pushes on a schedule of its own.
-
-```mermaid
-flowchart LR
-    M[Machine HMI Screen] -- HDMI --> K["kvmd  (:39000)"]
-    K -- "one-shot BGR888 frame, localhost" --> D[Driving script, on board]
-    D -- "POST /ocr, localhost" --> O["OCR service  (:8080)"]
-    O -- "boxes JSON" --> D
-    D -- "JSON result, over network" --> H[Host PC]
-    K -. "H.264 live stream, over network" .-> V[Viewer]
-    D -. "USB HID keyboard/mouse, if a rule matched" .-> M
-```
+In production, OCR is meant to ship as `libTPSLibPPOcr.so` with a flat C ABI. This repo does not build that library yet; `benchmark` is the current way to run the pipeline on an image.
 
 ## Directory Structure
 
 ```
-recc/
-  pipeline/                        # the two-stage OCR + decision/control system
-    ocr/                           # Stage 1: the OCR pipeline
-      benchmark.cpp                # one-shot CLI tool; reports timing/CPU/memory (averaged over cycles)
-      ppocr_det.cpp/h              # detection
-      ppocr_rec.cpp/h              # recognition
-      ppocr_system.cpp/h           # det + rec pipeline, NMS
-      rknn_executor.cpp/h          # low-level RKNN model runner
-      preprocess.cpp/h             # normalisation shared by both models
-    automation/                    # Stage 2: rule matching (see "Rule-Based Automation" below)
-      step_matcher.cpp             # CLI: one rule step vs one screen -> JSON match
-      rule_matcher.cpp/h           # the fuzzy keyword matcher itself
-      json_value.cpp/h             # minimal JSON reader for /ocr responses
-  api/
-    json_write.cpp/h               # JSON string escaping, shared with step_matcher
-  legacy/                          # superseded HTTP server, see legacy/README.md
+tpslibppocr/
+  ocr/                             # the OCR pipeline
+    benchmark.cpp                  # CLI: one .bgr888 image in, OCR text and timing out
+    ppocr_det.cpp/h                # detection
+    ppocr_rec.cpp/h                # recognition
+    ppocr_system.cpp/h             # det + rec pipeline, NMS
+    rknn_executor.cpp/h            # low-level RKNN model runner
+    preprocess.cpp/h               # normalisation shared by both models
+  test/                            # test screen images and sweep_det_thresholds.sh (see Usage below)
   cmake/aarch64-toolchain.cmake    # cross-compile toolchain file (see Build below)
   third_party/                     # rknn_api.h only (librknnrt.so lives on the board)
   aarch64-ubuntu20.04-toolchain.tar.gz  # cached aarch64 cross-compile toolchain (gitignored), see the section below
-  board_deploy/                    # testdata images and sweep_det_thresholds.sh; ready to pscp to a board once built (see the section below)
   model/
     PP-OCRv6_tiny_det.onnx         # conversion source
     PP-OCRv6_tiny_rec.onnx         # conversion source
@@ -72,7 +44,7 @@ recc/
 
 ## Getting Started
 
-Follow these steps in order: build once, deploy to a board, run it, then install it as a service.
+Follow these steps in order: build once, deploy to a board, then run it.
 
 ### Prerequisites
 
@@ -81,9 +53,7 @@ Follow these steps in order: build once, deploy to a board, run it, then install
 
 ### 1. Build
 
-The binaries in `board_deploy/` are aarch64. The first two are statically linked against OpenCV, Clipper, and zlib, leaving only `librknnrt.so` dynamic; `step_matcher` requires none of them. They are gitignored rather than committed, to keep binary blobs out of git history, so a fresh clone needs a build before first use. Rebuild only when the C++ source changes.
-
-The build produces four targets: the `ocr_core` library, `step_matcher`, and, with `-DBUILD_TOOLS=ON`, `benchmark` and the OCR service. Copy the executables from `build/` into `board_deploy/` before deploying.
+The build produces the `ocr_core` library and, with `-DBUILD_TOOLS=ON`, the `benchmark` executable: an aarch64 binary, statically linked against OpenCV, Clipper, and zlib, leaving only `librknnrt.so` dynamic. Build output is not committed, to keep binary blobs out of git history, so a fresh clone needs a build before first use. Rebuild only when the C++ source changes.
 
 Extract the cached toolchain once:
 
@@ -116,20 +86,20 @@ cmake --build build -j
 
 New board:
 
-1. Copy the binaries and model files over (from Windows/WSL):
+1. Copy the test images, model files and binary over (from Windows/WSL). Copy folders into the parent folder: naming a folder that does not exist yet as the destination makes `pscp` fail with `unable to open`.
 
    ```bash
-   pscp -r board_deploy tpsadmin@<board-ip>:/home/tpsadmin/board_deploy
-   pscp -r model tpsadmin@<board-ip>:/home/tpsadmin/model
+   pscp -r test tpsadmin@<board-ip>:/home/tpsadmin/
+   pscp -r model tpsadmin@<board-ip>:/home/tpsadmin/
+   pscp build/benchmark tpsadmin@<board-ip>:/home/tpsadmin/test/
    ```
 
-2. Test manually before relying on it. Run `benchmark` against one of the `testdata/*.bgr888` files. This catches a wrong path or a missing model file in plain view.
-3. Record the board's IP address wherever it needs to be reached from, such as the host PC. The binaries and models are identical on every board; only the IP differs.
+2. Test manually before relying on it. Run `benchmark` against one of the test images. This catches a wrong path or a missing model file in plain view.
 
-Existing board, after a rebuild: re-upload just the changed binary.
+Existing board, after a rebuild: re-upload just the binary.
 
 ```bash
-pscp board_deploy/step_matcher tpsadmin@192.168.1.101:/home/tpsadmin/board_deploy/step_matcher
+pscp build/benchmark tpsadmin@192.168.1.101:/home/tpsadmin/test/
 ```
 
 ## Usage
@@ -139,23 +109,13 @@ pscp board_deploy/step_matcher tpsadmin@192.168.1.101:/home/tpsadmin/board_deplo
 Loads a raw `.bgr888` frame, runs detection and recognition, prints the results, and reports timing, CPU, and memory. Its detection defaults match the production values (det_thresh 0.2, box_thresh 0.4, unclip_ratio 1.5, max_candidates 3000). Pass alternatives positionally to sweep.
 
 ```bash
-cd ~/board_deploy
-./benchmark /home/tpsadmin/model/PP-OCRv6_tiny_det_rk3588.rknn /home/tpsadmin/model/PP-OCRv6_tiny_rec_rk3588.rknn /home/tpsadmin/model/ppocr_keys_v6.txt testdata/alarm_1024x768.bgr888
+cd ~/test
+./benchmark /home/tpsadmin/model/PP-OCRv6_tiny_det_rk3588.rknn /home/tpsadmin/model/PP-OCRv6_tiny_rec_rk3588.rknn /home/tpsadmin/model/ppocr_keys_v6.txt alarm_1024x768.bgr888
 ```
 
-`testdata/` also has `auto_mode_1_1024x768.bgr888`, `auto_mode_2_1024x768.bgr888`, `normal_run_1024x768.bgr888`, and `full_test_1024x384.bgr888`. Pass a cycle count to average the timing, CPU, and memory numbers over repeated runs, for example `... testdata/alarm_1024x768.bgr888 10`.
+`test/` also has `alarm_1920x1080.bgr888`, `auto_mode_1_1024x768.bgr888`, `auto_mode_2_1024x768.bgr888`, `normal_run_1024x768.bgr888`, and `full_test_1024x384.bgr888`. Pass a cycle count to average the timing, CPU, and memory numbers over repeated runs, for example `... alarm_1024x768.bgr888 10`.
 
-The detector's own thresholds (`det_thresh`, `box_thresh`, `unclip_ratio`, `max_candidates`) are also CLI-configurable, as optional positional args after cycles and drop_score: `... testdata/alarm_1024x768.bgr888 1 0.4 <det_thresh> <box_thresh> <unclip_ratio> <max_candidates>`. These had been hardcoded since the project's first commit, with no record of being tested against alternatives. `board_deploy/sweep_det_thresholds.sh` sweeps a small grid of them against every file in `testdata/` and logs box counts, timing, and recognized text per combination to `sweep_results.csv`. Run it from `board_deploy/` after rebuilding `benchmark`.
-
-## Rule-Based Automation (Prototype)
-
-`pipeline/automation/` matches a person-written rule against real OCR output. A rule is a list of steps, each carrying the box a person drew around what it acts on and one of three actions: `click`, `type` or `halt`. Keyword matching is fuzzy, compared word by word against a run of the keyword's own length, at a 0.75 threshold. It never touches an image, only the text and coordinates OCR has already produced. Unlike the rest of `pipeline/`, it has no OpenCV or RKNN dependency and is not gated behind `BUILD_TOOLS` or a cross-compile toolchain, so it builds on any machine with a C++17 compiler:
-
-```bash
-cmake --build build --target step_matcher
-```
-
-Its single binary, `step_matcher`, checks one rule step against one screen file and prints the match as JSON. It is driven by `recc_gen5_test_kit/automation/`, which reads the screen live and can send real USB HID input. The driver's `--dry-run --replay` mode performs the same check against a saved screen without touching hardware. See that folder's README for what is tested, including the USB gadget setup HID output depends on, and for the captured screen and rule files it runs against.
+The detector's own thresholds (`det_thresh`, `box_thresh`, `unclip_ratio`, `max_candidates`) are also CLI-configurable, as optional positional args after cycles and drop_score: `... alarm_1024x768.bgr888 1 0.4 <det_thresh> <box_thresh> <unclip_ratio> <max_candidates>`. These had been hardcoded since the project's first commit, with no record of being tested against alternatives. `test/sweep_det_thresholds.sh` sweeps a small grid of them against the 1024-wide test images and logs box counts, timing, and recognized text per combination to `sweep_results.csv`. Run it from `~/test` on the board, with `benchmark` copied in.
 
 ## Environment
 
@@ -166,4 +126,4 @@ Its single binary, `step_matcher`, checks one rule step against one screen file 
 | OpenCV / Clipper / zlib (board) | statically linked, core+imgproc only (see `CMakeLists.txt`) |
 | Board | RK3588, Ubuntu 20.04 aarch64 |
 | Board IP (this dev board) | 192.168.1.101, user tpsadmin |
-| Board deploy path | `/home/tpsadmin/board_deploy` |
+| Board deploy paths | `/home/tpsadmin/test` (benchmark and test images), `/home/tpsadmin/model` |
