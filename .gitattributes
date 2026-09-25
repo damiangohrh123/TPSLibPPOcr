@@ -1,0 +1,8 @@
+# Store text files with LF line endings; each machine checks them out in its own style.
+* text=auto
+# Shell scripts run on the board, so they stay LF even in a Windows checkout.
+*.sh text eol=lf
+# Raw images and models are binary: never convert their bytes.
+*.bgr888 binary
+*.rknn binary
+*.onnx binary

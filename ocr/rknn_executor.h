@@ -57,7 +57,7 @@ private:
     bool loaded_ = false;         // Whether ctxs_ currently owns loaded model(s).
 
     // Per-output shape, cached once in load() since it's fixed for the life
-    // of the model -- avoids re-querying it on every run() call.
+    // of the model, which avoids re-querying it on every run() call.
     std::vector<std::vector<int>> output_shapes_;
 };
 

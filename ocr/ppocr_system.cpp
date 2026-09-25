@@ -247,7 +247,7 @@ std::vector<OcrResult> TextSystem::run(const cv::Mat& img, RunTiming* timing) co
 	std::vector<OcrResult> results;
 
 	if (dt_boxes.empty()) {
-		// No boxes found -- falls back to recognizing the whole image as one block of text.
+		// No boxes found: falls back to recognizing the whole image as one block of text.
 		int h = img.rows, w = img.cols;
 		auto rec_start = std::chrono::steady_clock::now();
 		std::vector<RecResult> rec_res = recognizer_.run({ img });

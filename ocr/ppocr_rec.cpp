@@ -76,7 +76,7 @@ std::vector<RecResult> TextRecognizer::run(const std::vector<cv::Mat>& imgs) con
 		// what the model was fine-tuned against (see the Eval transform in
 		// PP-OCRv6_tiny_rec_finetune.yml, the fine-tuning config):
 		// scale to kRecH preserving aspect ratio, cap at kRecW, then
-		// zero-pad the remaining width -- never stretch. The old plain cv::resize
+		// zero-pad the remaining width, never stretch. The old plain cv::resize
 		// squeezed short tokens (aspect ~1.2) about 5.6x narrower than the
 		// model's native 6.67 (320/48).
 		const cv::Mat& src = imgs[idx];

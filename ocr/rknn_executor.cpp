@@ -53,7 +53,7 @@ bool RknnExecutor::load(const std::string& model_path, int num_cores) {
 			output_shapes_[i].assign(attr.dims, attr.dims + attr.n_dims);
 		}
 		else {
-			fprintf(stderr, "rknn_query(OUTPUT_ATTR, index=%u) failed (ret=%d) -- shape left empty\n", i, qret);
+			fprintf(stderr, "rknn_query(OUTPUT_ATTR, index=%u) failed (ret=%d), shape left empty\n", i, qret);
 		}
 	}
 

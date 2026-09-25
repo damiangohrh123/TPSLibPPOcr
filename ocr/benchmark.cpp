@@ -1,8 +1,6 @@
 // Runs the OCR pipeline (TextSystem::run) on one image N times, timing detection and
-// recognition separately, plus CPU, memory, and recognized text. Calls the same shared
-// pipeline code the rest of the repo uses, so there's one implementation of
-// detection and recognition, not a separate copy. With cycles=1 it doubles as a
-// single-shot CLI tool.
+// recognition separately, plus CPU, memory, and recognized text. With cycles=1 it
+// doubles as a single-shot CLI tool.
 #include <algorithm>
 #include <chrono>
 #include <cmath>
@@ -39,7 +37,7 @@ std::pair<int, int> parse_raw_dimensions(const std::string& path) {
     return {std::atoi(dims.substr(0, x).c_str()), std::atoi(dims.substr(x + 1).c_str())};
 }
 
-// Reads the bytes straight into a cv::Mat -- no decoding, since the bytes on
+// Reads the bytes straight into a cv::Mat with no decoding, since the bytes on
 // disk are already exactly what a CV_8UC3 Mat holds in memory. Returns an
 // empty Mat on any failure, having already printed why.
 cv::Mat load_image(const std::string& path) {
@@ -90,7 +88,7 @@ double get_rss_mb() {
 }
 
 // Returns {utime, stime} in clock ticks, fields 14 and 15 of
-// /proc/self/stat (1-indexed) -- this process's own CPU time.
+// /proc/self/stat (1-indexed): this process's own CPU time.
 std::pair<long, long> read_cpu_times() {
     std::ifstream f("/proc/self/stat");
     std::string content((std::istreambuf_iterator<char>(f)), std::istreambuf_iterator<char>());
@@ -201,7 +199,7 @@ int main(int argc, char** argv) {
     const int cycles = argc > 5 ? std::atoi(argv[5]) : 1;
     const double drop_score = argc > 6 ? std::atof(argv[6]) : 0.4;
     // Detection knobs are CLI-configurable so a sweep can compare values without recompiling.
-    // det_thresh 0.2 beat 0.3 (82.5% vs 80.7%, 394 fields on 5 screens; Automation_Pipeline.docx Appendix C).
+    // det_thresh 0.2 beat 0.3 (82.5% vs 80.7% on 394 fields across 5 screens).
     const float det_thresh = argc > 7 ? std::atof(argv[7]) : 0.2f;
     const float box_thresh = argc > 8 ? std::atof(argv[8]) : 0.4f;
     const float unclip_ratio = argc > 9 ? std::atof(argv[9]) : 1.5f;

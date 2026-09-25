@@ -30,10 +30,10 @@ add_library(ocr_core STATIC
 )
 
 target_include_directories(ocr_core PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
-# imgcodecs is intentionally not linked: frames arrive as already-decoded
-# cv::Mat from an earlier pipeline stage, so dropping it avoids needing
-# libjpeg/libpng for the board build. zlib is still required regardless --
-# opencv_core's FileStorage code calls gz* internally.
+# imgcodecs is intentionally not linked: input is raw BGR888, never an
+# encoded image, so dropping it avoids needing libjpeg/libpng for the board
+# build. zlib is still required regardless: opencv_core's FileStorage code
+# calls gz* internally.
 #
 # --start-group around core+imgproc: imgproc calls core-internal helpers our
 # own code never references, which a single left-to-right pass would leave

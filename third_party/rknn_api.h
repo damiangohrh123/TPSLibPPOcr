@@ -3,8 +3,8 @@
 *    Vendored from Rockchip's rknpu2 / rknn-toolkit2 SDK (rknn_api.h).
 *    This is the declarations-only header needed to compile against
 *    librknnrt on the board. It is NOT redistributed source of the
-*    library itself -- librknnrt.so must come from the board's SDK
-*    install (librknnrt 2.4.2a2 or newer -- see the "Environment" table
+*    library itself: librknnrt.so must come from the board's SDK
+*    install (librknnrt 2.4.2a2 or newer, see the "Environment" table
 *    in the top-level README.md).
 *
 *    Trimmed to the subset of declarations rknn_executor.cpp actually

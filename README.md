@@ -106,7 +106,7 @@ pscp build/benchmark tpsadmin@192.168.1.101:/home/tpsadmin/test/
 
 ### `benchmark` (One-Shot CLI)
 
-Loads a raw `.bgr888` frame, runs detection and recognition, prints the results, and reports timing, CPU, and memory. Its detection defaults match the production values (det_thresh 0.2, box_thresh 0.4, unclip_ratio 1.5, max_candidates 3000). Pass alternatives positionally to sweep.
+Loads a raw `.bgr888` frame, runs detection and recognition, prints the results, and reports timing, CPU, and memory. Its detection defaults are the tuned values (det_thresh 0.2, box_thresh 0.4, unclip_ratio 1.5, max_candidates 3000). Pass alternatives positionally to sweep.
 
 ```bash
 cd ~/test

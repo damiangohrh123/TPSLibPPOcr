@@ -2,7 +2,7 @@
 # (aarch64, Ubuntu 20.04 / glibc 2.31).
 #
 # Expects aarch64-ubuntu20.04-toolchain.tar.gz to have been extracted into
-# $HOME and fix_toolchain_paths.sh to have been run -- see the "Getting
+# $HOME and fix_toolchain_paths.sh to have been run. See the "Getting
 # Started > 1. Build" section of the top-level README.md. That produces the
 # wrapper compilers this file points at, which pass the right -B flags for
 # the target binutils and the gcc-9 frontend.

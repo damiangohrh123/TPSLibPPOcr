@@ -6,8 +6,7 @@
 # copied in (see ocr/benchmark.cpp for the positional arg order).
 #
 # This sweep has already been run once: det_thresh 0.2 beat the old 0.3
-# (see the default in ocr/benchmark.cpp, and Appendix C of
-# documentation/Automation_Pipeline.docx). Kept for re-running after a model
+# (see the default in ocr/benchmark.cpp). Kept for re-running after a model
 # or screen-layout change. max_candidates stays at its default (3000); it
 # only matters on a very cluttered screen.
 #
