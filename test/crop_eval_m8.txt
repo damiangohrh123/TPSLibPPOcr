@@ -1,0 +1,113 @@
+image alarm_1024x768.bgr888, 31 regions, 5 timed cycles per mode, margin 8 px
+
+id	category	mode	ms	score	match	cer	text
+t01	tight	rec	12.5	95	no	0.07	Ful Automation
+t01	tight	stretch	50.6	95	no	0.07	Ful Automation
+t01	tight	pad	50.0	98	no	0.07	FulI Automation
+t02	tight	rec	9.0	92	yes	0.00	Device data No
+t02	tight	stretch	30.3	96	yes	0.00	Device data No
+t02	tight	pad	32.4	98	yes	0.00	Device data No
+t03	tight	rec	6.6	85	yes	0.00	Height adjust
+t03	tight	stretch	31.1	99	yes	0.00	Height adjust
+t03	tight	pad	32.5	100	yes	0.00	Height adjust
+t04	tight	rec	6.6	98	yes	0.00	Feed speed
+t04	tight	stretch	30.7	96	yes	0.00	Feed speed
+t04	tight	pad	32.4	99	yes	0.00	Feed speed
+t05	tight	rec	6.6	92	yes	0.00	Change speed
+t05	tight	stretch	30.3	92	yes	0.00	Change speed
+t05	tight	pad	43.3	98	yes	0.00	Change speed
+t06	tight	rec	8.4	96	yes	0.00	0.259
+t06	tight	stretch	41.9	100	yes	0.00	0.259
+t06	tight	pad	43.5	99	yes	0.00	0.259
+t07	tight	rec	8.3	99	yes	0.00	2.000
+t07	tight	stretch	41.8	100	yes	0.00	2.000
+t07	tight	pad	43.3	97	yes	0.00	2.000
+t08	tight	rec	8.3	92	no	0.05	Since Blade replacement,
+t08	tight	stretch	42.2	92	no	0.05	Since Blade replacement,
+t08	tight	pad	43.0	99	yes	0.00	Since Blade replacement
+t09	tight	rec	7.3	97	yes	0.00	Blade breakage
+t09	tight	stretch	30.3	97	yes	0.00	Blade breakage
+t09	tight	pad	32.6	98	yes	0.00	Blade breakage
+t10	tight	rec	6.6	93	no	0.06	2024/08/26 13:20:32
+t10	tight	stretch	30.3	93	no	0.06	2024/08/26 13:20:32
+t10	tight	pad	32.7	99	yes	0.00	2024/08/28 13:20:32
+t11	tight	rec	6.6	71	no	0.17	ExitFu Auto
+t11	tight	stretch	30.4	71	no	0.17	ExitFu Auto
+t11	tight	pad	32.4	100	yes	0.00	Exit Full Auto
+t12	tight	rec	6.6	96	yes	0.00	Precut ON
+t12	tight	stretch	30.9	100	yes	0.00	Precut ON
+t12	tight	pad	32.5	100	yes	0.00	Precut ON
+l01	loose	rec	6.6	79	no	0.17	OHLINE
+l01	loose	stretch	30.3	79	no	0.17	OHLINE
+l01	loose	pad	32.3	100	yes	0.00	ONLINE
+l02	loose	rec	6.6	97	no	0.17	RENOTE
+l02	loose	stretch	30.2	97	no	0.17	RENOTE
+l02	loose	pad	32.4	86	yes	0.00	REMOTE
+l03	loose	rec	6.5	82	yes	0.00	ALARM
+l03	loose	stretch	30.3	82	yes	0.00	ALARM
+l03	loose	pad	33.2	90	yes	0.00	ALARM
+l04	loose	rec	8.1	87	no	0.20	10.259
+l04	loose	stretch	41.6	100	yes	0.00	0.259
+l04	loose	pad	41.8	95	yes	0.00	0.259
+l05	loose	rec	8.3	81	yes	0.00	2.000
+l05	loose	stretch	41.8	100	yes	0.00	2.000
+l05	loose	pad	43.3	92	yes	0.00	2.000
+l06	loose	rec	8.2	94	yes	0.00	28
+l06	loose	stretch	41.8	79	no	0.50	22
+l06	loose	pad	43.0	100	yes	0.00	28
+l07	loose	rec	8.2	74	no	0.67	[CHT
+l07	loose	stretch	41.2	74	no	0.67	[CHT
+l07	loose	pad	41.7	95	no	0.33	CHT
+l08	loose	rec	8.3	86	yes	0.00	ZACU1787
+l08	loose	stretch	41.8	86	yes	0.00	ZACU1787
+l08	loose	pad	40.0	100	yes	0.00	ZACU1787
+l09	loose	rec	6.5	0	no	1.00	
+l09	loose	stretch	40.5	100	yes	0.00	Sensor
+l09	loose	pad	53.2	100	yes	0.00	Sensor
+m01	multi	rec	8.5	27	no	0.72	Sir ad rlcorad ra
+m01	multi	stretch	42.0	0	no	1.00	
+m01	multi	pad	81.0	91	yes	0.00	Since Blade replacement | lines m Blade breakage
+m02	multi	rec	5.9	16	no	0.90	o otie
+m02	multi	stretch	36.7	96	no	0.05	C02 Bubbler | Resistivity
+m02	multi	pad	42.7	96	no	0.05	C02 Bubbler | Resistivity
+m03	multi	rec	8.5	39	no	0.83	Aaeon a o E hA TIo
+m03	multi	stretch	42.0	0	no	1.00	
+m03	multi	pad	59.3	94	no	0.03	Alignment Q value | Macro Chl Ch2 Ch3 Ch4 Time
+m04	multi	rec	8.0	27	no	1.00	代
+m04	multi	stretch	42.1	95	no	0.74	Center-0.0034mm,LG C=+0.0024
+m04	multi	pad	92.8	94	no	0.07	Z1 Point=100.0 | Centr-0.0034mm,LG C=+0.0024mm | Widtb=0.0315mm,LG W=0.0531mm | Max_W=0.0531mm | Half W=0.0285mm
+m05	multi	rec	7.9	0	no	1.00	
+m05	multi	stretch	41.4	0	no	1.00	
+m05	multi	pad	72.0	97	no	0.04	CHIPPING | Max=0.0000mm | Area=0pix. | LGC ADJ=+0.0029mm
+m06	multi	rec	6.6	38	no	0.64	Fed s 0
+m06	multi	stretch	48.7	99	yes	0.00	Feed speed | 2.000
+m06	multi	pad	40.1	98	yes	0.00	Feed speed | 2.000
+g01	long	rec	6.7	20	no	0.80	3 e ea tes
+g01	long	stretch	77.4	0	no	1.00	
+g01	long	pad	82.0	94	yes	0.00	K0039 Kerf check: Off center.
+g02	long	rec	8.4	85	no	0.10	ID ADAU17-AD3-SC-DD-CB-HBEAM
+g02	long	stretch	41.2	85	no	0.10	ID ADAU17-AD3-SC-DD-CB-HBEAM
+g02	long	pad	56.5	95	no	0.03	ID ADAU1787-AD3-SC-DD-CB-HBEAM
+g03	long	rec	8.0	85	no	0.08	Ker Vvisual Check Interval 28
+g03	long	stretch	31.5	85	no	0.08	Ker Vvisual Check Interval 28
+g03	long	pad	39.9	99	yes	0.00	Kerf Visual Check Interval 28
+g04	long	rec	6.7	36	no	0.66	2021328 OLM ROUE AN
+g04	long	stretch	70.7	0	no	1.00	
+g04	long	pad	104.1	96	yes	0.00	2024/08/28 13:20:32 ONLINE REMOTE ALARM
+
+mode	category	matched	mean_cer	mean_ms
+pad	all	24/31	0.020	47.8
+pad	long	3/4	0.009	70.6
+pad	loose	8/9	0.037	40.1
+pad	multi	2/6	0.031	64.7
+pad	tight	11/12	0.006	37.6
+rec	all	12/31	0.300	7.6
+rec	long	0/4	0.410	7.4
+rec	loose	4/9	0.244	7.5
+rec	multi	0/6	0.851	7.5
+rec	tight	8/12	0.028	7.8
+stretch	all	14/31	0.252	39.8
+stretch	long	0/4	0.546	55.2
+stretch	loose	5/9	0.167	37.7
+stretch	multi	1/6	0.630	42.2
+stretch	tight	8/12	0.028	35.1
