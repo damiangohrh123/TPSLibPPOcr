@@ -64,4 +64,8 @@ if(BUILD_TOOLS)
     add_executable(benchmark ocr/benchmark.cpp)
     target_link_libraries(benchmark PRIVATE ocr_core)
     target_link_options(benchmark PRIVATE -Wl,--allow-shlib-undefined)
+    # crop_eval: compares ways of reading drawn regions, against test/crop_regions_*.tsv.
+    add_executable(crop_eval ocr/crop_eval.cpp)
+    target_link_libraries(crop_eval PRIVATE ocr_core)
+    target_link_options(crop_eval PRIVATE -Wl,--allow-shlib-undefined)
 endif()

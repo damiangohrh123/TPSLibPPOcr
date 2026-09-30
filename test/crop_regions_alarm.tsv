@@ -1,0 +1,32 @@
+# Regions on alarm_1024x768.bgr888 for crop_eval: id, category, x, y, width, height, expected text (lines joined by " | ").
+t01	tight	559	98	205	27	Full Automation
+t02	tight	559	126	136	23	Device data No
+t03	tight	708	272	126	22	Height adjust
+t04	tight	559	362	100	22	Feed speed
+t05	tight	708	362	120	22	Change speed
+t06	tight	636	294	57	24	0.259
+t07	tight	636	384	59	24	2.000
+t08	tight	557	411	194	21	Since Blade replacement
+t09	tight	738	434	122	17	Blade breakage
+t10	tight	175	16	162	22	2024/08/28 13:20:32
+t11	tight	51	649	109	28	Exit Full Auto
+t12	tight	589	728	81	22	Precut ON
+l01	loose	348	16	148	26	ONLINE
+l02	loose	507	16	124	26	REMOTE
+l03	loose	641	16	128	26	ALARM
+l04	loose	604	292	92	30	0.259
+l05	loose	604	382	92	30	2.000
+l06	loose	786	558	52	28	28
+l07	loose	642	242	56	28	CH1
+l08	loose	740	146	128	28	ZACU1787
+l09	loose	776	20	70	68	Sensor
+m01	multi	552	410	315	43	Since Blade replacement | lines m Blade breakage
+m02	multi	870	512	112	46	CO2 Bubbler | Resistivity
+m03	multi	560	500	285	36	Alignment Q value | Macro Ch1 Ch2 Ch3 Ch4 Time
+m04	multi	270	346	245	78	Z1_Point=100.0 | Center=-0.0034mm,LG_C=+0.0024mm | Width=0.0315mm,LG_W=0.0531mm | Max_W=0.0531mm | Half_W=0.0285mm
+m05	multi	270	505	158	66	CHIPPING | Max=0.0000mm | Area=0pix. | LG_C_ADJ=+0.0029mm
+m06	multi	559	360	140	52	Feed speed | 2.000
+g01	long	175	58	595	24	K0039 Kerf check: Off center.
+g02	long	563	175	282	24	ID ADAU1787-AD3-SC-DD-CB-WBEAM
+g03	long	559	558	280	26	Kerf Visual Check Interval 28
+g04	long	175	15	595	27	2024/08/28 13:20:32 ONLINE REMOTE ALARM

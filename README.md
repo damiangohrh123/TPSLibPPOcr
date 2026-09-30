@@ -25,6 +25,8 @@ In production, OCR is meant to ship as `libTPSLibPPOcr.so` with a flat C ABI. Th
 tpslibppocr/
   ocr/                             # the OCR pipeline
     benchmark.cpp                  # CLI: one .bgr888 image in, OCR text and timing out
+    crop_eval.cpp                  # CLI: compares ways of reading drawn regions (see Usage below)
+    raw_image.h                    # loads a raw .bgr888 file, shared by both tools
     ppocr_det.cpp/h                # detection
     ppocr_rec.cpp/h                # recognition
     ppocr_system.cpp/h             # det + rec pipeline, NMS
@@ -116,6 +118,12 @@ cd ~/test
 `test/` also has `alarm_1920x1080.bgr888`, `auto_mode_1_1024x768.bgr888`, `auto_mode_2_1024x768.bgr888`, `normal_run_1024x768.bgr888`, and `full_test_1024x384.bgr888`. `test/uv/` holds six screens from a UV machine, and `test/uv_all.txt` is one `benchmark` run over each at the tuned defaults. Pass a cycle count to average the timing, CPU, and memory numbers over repeated runs, for example `... alarm_1024x768.bgr888 10`.
 
 The detector's own thresholds (`det_thresh`, `box_thresh`, `unclip_ratio`, `max_candidates`) are also CLI-configurable, as optional positional args after cycles and drop_score: `... alarm_1024x768.bgr888 1 0.4 <det_thresh> <box_thresh> <unclip_ratio> <max_candidates>`. These had been hardcoded since the project's first commit, with no record of being tested against alternatives. `test/sweep_det_thresholds.sh` sweeps a small grid of them against the 1024-wide test images and logs box counts, timing, and recognized text per combination to `sweep_results.csv`. Run it from `~/test` on the board, with `benchmark` copied in.
+
+`crop_eval` reads regions drawn on a screen, as the controller's Screen Capture settings define them, in three ways: recognition only (`rec`), detection on the crop stretched to the detector's 480x480 input (`stretch`, the pipeline as is), and detection on the crop padded to that size with its own edge colour, so text keeps its native scale (`pad`). Each region's result is compared with its expected text, ignoring spaces. `test/crop_regions_alarm.tsv` lists 31 regions on `alarm_1024x768.bgr888` in four categories: tight, loose, multi-line and long. The optional margin widens each crop by that many pixels, and the detection modes then keep only text whose box centre is inside the drawn region.
+
+```bash
+./crop_eval /home/tpsadmin/model/PP-OCRv6_tiny_det_rk3588.rknn /home/tpsadmin/model/PP-OCRv6_tiny_rec_rk3588.rknn /home/tpsadmin/model/ppocr_keys_v6.txt alarm_1024x768.bgr888 crop_regions_alarm.tsv [cycles=5] [margin=0]
+```
 
 ## Environment
 
