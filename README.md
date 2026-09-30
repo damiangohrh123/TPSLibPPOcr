@@ -32,7 +32,7 @@ tpslibppocr/
     ppocr_system.cpp/h             # det + rec pipeline, NMS
     rknn_executor.cpp/h            # low-level RKNN model runner
     preprocess.cpp/h               # normalisation shared by both models
-  test/                            # test screen images and sweep_det_thresholds.sh (see Usage below)
+  test/                            # test screens, crop_eval regions and sweep_det_thresholds.sh (see Usage below)
   cmake/aarch64-toolchain.cmake    # cross-compile toolchain file (see Build below)
   third_party/                     # rknn_api.h only (librknnrt.so lives on the board)
   aarch64-ubuntu20.04-toolchain.tar.gz  # cached aarch64 cross-compile toolchain (gitignored), see the section below
@@ -55,7 +55,7 @@ Follow these steps in order: build once, deploy to a board, then run it.
 
 ### 1. Build
 
-The build produces the `ocr_core` library and, with `-DBUILD_TOOLS=ON`, the `benchmark` executable: an aarch64 binary, statically linked against OpenCV, Clipper, and zlib, leaving only `librknnrt.so` dynamic. Build output is not committed, to keep binary blobs out of git history, so a fresh clone needs a build before first use. Rebuild only when the C++ source changes.
+The build produces the `ocr_core` library and, with `-DBUILD_TOOLS=ON`, the `benchmark` and `crop_eval` executables: aarch64 binaries, statically linked against OpenCV, Clipper, and zlib, leaving only `librknnrt.so` dynamic. Build output is not committed, to keep binary blobs out of git history, so a fresh clone needs a build before first use. Rebuild only when the C++ source changes.
 
 Extract the cached toolchain once:
 
@@ -119,7 +119,7 @@ cd ~/test
 
 The detector's own thresholds (`det_thresh`, `box_thresh`, `unclip_ratio`, `max_candidates`) are also CLI-configurable, as optional positional args after cycles and drop_score: `... alarm_1024x768.bgr888 1 0.4 <det_thresh> <box_thresh> <unclip_ratio> <max_candidates>`. These had been hardcoded since the project's first commit, with no record of being tested against alternatives. `test/sweep_det_thresholds.sh` sweeps a small grid of them against the 1024-wide test images and logs box counts, timing, and recognized text per combination to `sweep_results.csv`. Run it from `~/test` on the board, with `benchmark` copied in.
 
-`crop_eval` reads regions drawn on a screen, as the controller's Screen Capture settings define them, in three ways: recognition only (`rec`), detection on the crop stretched to the detector's 480x480 input (`stretch`, the pipeline as is), and detection on the crop padded to that size with its own edge colour, so text keeps its native scale (`pad`). Each region's result is compared with its expected text, ignoring spaces. `test/crop_regions_alarm.tsv` lists 31 regions on `alarm_1024x768.bgr888` in four categories: tight, loose, multi-line and long. The optional margin widens each crop by that many pixels, and the detection modes then keep only text whose box centre is inside the drawn region.
+`crop_eval` reads regions drawn on a screen, as the controller's Screen Capture settings define them, in three ways: recognition only (`rec`), detection on the crop stretched to the detector's 480x480 input (`stretch`, the pipeline as is), and detection on the crop padded to that size with its own edge colour, so text keeps its native scale (`pad`). Each region's result is compared with its expected text, ignoring spaces. `test/crop_regions_alarm.tsv` lists 31 regions on `alarm_1024x768.bgr888` in four categories: tight, loose, multi-line and long. The optional margin widens each crop by that many pixels, and the detection modes then keep only text whose box centre is inside the drawn region. Copy `build/crop_eval` to `~/test` on the board, as for `benchmark`.
 
 ```bash
 ./crop_eval /home/tpsadmin/model/PP-OCRv6_tiny_det_rk3588.rknn /home/tpsadmin/model/PP-OCRv6_tiny_rec_rk3588.rknn /home/tpsadmin/model/ppocr_keys_v6.txt alarm_1024x768.bgr888 crop_regions_alarm.tsv [cycles=5] [margin=0]

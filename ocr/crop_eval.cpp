@@ -1,5 +1,4 @@
-// Compares three ways to read a drawn region with PP-OCR: recognition only, detection on the crop
-// stretched to the detector's input (TextSystem as is), and detection on the crop padded to it.
+// Compares three ways to read a drawn region with PP-OCR: recognition only, stretched detection and padded detection.
 #include <algorithm>
 #include <chrono>
 #include <cmath>
