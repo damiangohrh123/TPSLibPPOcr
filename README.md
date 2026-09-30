@@ -113,7 +113,7 @@ cd ~/test
 ./benchmark /home/tpsadmin/model/PP-OCRv6_tiny_det_rk3588.rknn /home/tpsadmin/model/PP-OCRv6_tiny_rec_rk3588.rknn /home/tpsadmin/model/ppocr_keys_v6.txt alarm_1024x768.bgr888
 ```
 
-`test/` also has `alarm_1920x1080.bgr888`, `auto_mode_1_1024x768.bgr888`, `auto_mode_2_1024x768.bgr888`, `normal_run_1024x768.bgr888`, and `full_test_1024x384.bgr888`. Pass a cycle count to average the timing, CPU, and memory numbers over repeated runs, for example `... alarm_1024x768.bgr888 10`.
+`test/` also has `alarm_1920x1080.bgr888`, `auto_mode_1_1024x768.bgr888`, `auto_mode_2_1024x768.bgr888`, `normal_run_1024x768.bgr888`, and `full_test_1024x384.bgr888`. `test/uv/` holds six screens from a UV machine, and `test/uv_all.txt` is one `benchmark` run over each at the tuned defaults. Pass a cycle count to average the timing, CPU, and memory numbers over repeated runs, for example `... alarm_1024x768.bgr888 10`.
 
 The detector's own thresholds (`det_thresh`, `box_thresh`, `unclip_ratio`, `max_candidates`) are also CLI-configurable, as optional positional args after cycles and drop_score: `... alarm_1024x768.bgr888 1 0.4 <det_thresh> <box_thresh> <unclip_ratio> <max_candidates>`. These had been hardcoded since the project's first commit, with no record of being tested against alternatives. `test/sweep_det_thresholds.sh` sweeps a small grid of them against the 1024-wide test images and logs box counts, timing, and recognized text per combination to `sweep_results.csv`. Run it from `~/test` on the board, with `benchmark` copied in.
 
