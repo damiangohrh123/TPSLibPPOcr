@@ -1,0 +1,427 @@
+=== uv/AEUV_10.10.41.2_1024x768.bgr888
+
+  OCR Benchmark  (1 cycle)
+  Image          : uv/AEUV_10.10.41.2_1024x768.bgr888
+  Det model      : /home/tpsadmin/model/PP-OCRv6_tiny_det_rk3588.rknn
+  Rec model      : /home/tpsadmin/model/PP-OCRv6_tiny_rec_rk3588.rknn
+  Drop score     : 0.40
+  Det thresh     : 0.20
+  Box thresh     : 0.40
+  Unclip ratio   : 1.50
+  Max candidates : 3000
+--
+Image load       : 4.1 ms  (2359296 bytes)
+Loading models (not included in timing)...
+Models loaded.
+
+Running 1 cycle...
+
+  RESULTS
+--
+  Avg time   : 487.5 ms  (std 0.0)
+    Det      : 269.2 ms  (std 0.0)
+    Rec      : 204.8 ms  (std 0.0, 52 crops)
+    Other    : 13.4 ms  (sort, NMS, crop extraction)
+  Avg CPU    : 163.7%
+  Avg memory : 176.7 MB
+  Recognized text:
+    [ 0] score=0.524 text="氏"  box=(0,0)-(77,0)-(77,58)-(0,58)
+    [ 1] score=0.950 text="STOP"  box=(250,5)-(286,5)-(286,38)-(250,38)
+    [ 2] score=0.999 text="Init"  box=(103,39)-(125,39)-(125,53)-(103,53)
+    [ 3] score=0.916 text="Start"  box=(174,41)-(200,36)-(204,49)-(178,53)
+    [ 4] score=1.000 text="art"  box=(192,39)-(207,39)-(207,54)-(192,54)
+    [ 5] score=0.974 text="Stop"  box=(255,40)-(281,40)-(281,54)-(255,54)
+    [ 6] score=0.997 text="Setup"  box=(331,38)-(363,38)-(363,54)-(331,54)
+    [ 7] score=0.966 text="Clear Alarm"  box=(879,37)-(941,37)-(941,54)-(879,54)
+    [ 8] score=0.990 text="Exit"  box=(970,39)-(995,39)-(995,55)-(970,55)
+    [ 9] score=0.933 text="Tape Type :"  box=(463,83)-(560,83)-(560,104)-(463,104)
+    [10] score=0.986 text="N-600L676H"  box=(751,86)-(850,86)-(850,107)-(751,107)
+    [11] score=0.969 text="Cassette Type :"  box=(459,115)-(587,119)-(586,141)-(458,137)
+    [12] score=0.424 text="8"  box=(751,125)-(761,123)-(764,138)-(754,140)
+    [13] score=0.956 text="UV Dosage :"  box=(460,150)-(564,154)-(562,175)-(458,171)
+    [14] score=0.993 text="600"  box=(745,152)-(783,152)-(783,171)-(745,171)
+    [15] score=0.877 text="mJicm ²"  box=(873,154)-(938,152)-(938,171)-(873,173)
+    [16] score=0.975 text="UV Irradiation Time :"  box=(459,176)-(621,176)-(621,198)-(459,198)
+    [17] score=0.875 text="0"  box=(747,179)-(766,179)-(766,195)-(747,195)
+    [18] score=0.997 text="seconds"  box=(873,179)-(944,179)-(944,198)-(873,198)
+    [19] score=0.929 text="Uv Working Time :"  box=(459,200)-(613,203)-(612,226)-(458,222)
+    [20] score=1.000 text="111:26"  box=(745,200)-(809,200)-(809,222)-(745,222)
+    [21] score=1.000 text="hours"  box=(870,203)-(926,203)-(926,222)-(870,222)
+    [22] score=0.976 text="UV Irradiation Intensity :"  box=(461,227)-(651,227)-(651,248)-(461,248)
+    [23] score=0.999 text="0.0"  box=(747,227)-(776,227)-(776,248)-(747,248)
+    [24] score=0.950 text="mWicm²"  box=(872,229)-(944,227)-(945,246)-(872,248)
+    [25] score=0.981 text="UV Lamps Status :"  box=(463,252)-(610,254)-(610,274)-(463,271)
+    [26] score=0.846 text="OK"  box=(748,252)-(779,252)-(779,274)-(748,274)
+    [27] score=0.911 text="Lot No :"  box=(462,289)-(530,291)-(529,314)-(461,312)
+    [28] score=0.936 text="UQ36C015.1Z"  box=(752,294)-(881,296)-(881,321)-(751,319)
+    [29] score=0.807 text="07/09/26. LOAD complete."  box=(429,567)-(601,569)-(601,585)-(429,583)
+    [30] score=0.791 text=" 07/09/2.. UNLAD processing"  box=(429,585)-(615,587)-(614,603)-(429,601)
+    [31] score=0.594 text="O0770926 NK MAKING Comoleted"  box=(427,598)-(642,598)-(642,621)-(427,621)
+    [32] score=0.747 text="07709/26. UNLOAD complet."  box=(427,616)-(619,616)-(619,638)-(427,638)
+    [33] score=0.717 text="07709/26.. LOoP processing."  box=(429,637)-(603,638)-(603,654)-(429,652)
+    [34] score=0.660 text="Q07709/26.. Proess cyle cmplete"  box=(429,653)-(627,655)-(627,671)-(429,669)
+    [35] score=0.736 text="007/09/26.. L00P ailed.."  box=(427,667)-(576,667)-(576,690)-(427,690)
+    [36] score=0.676 text="07/0926. SAFETYSTOP procsing"  box=(425,685)-(644,685)-(644,706)-(425,706)
+    [37] score=0.491 text="07026 Namal tp ispocessing"  box=(425,699)-(640,703)-(640,725)-(424,721)
+    [38] score=0.638 text=" 07709/26 afey Thead eminated"  box=(427,718)-(636,718)-(636,739)-(427,739)
+    [39] score=0.956 text="S afety Thread terminated"  box=(4,744)-(128,744)-(128,762)-(4,762)
+    [40] score=0.985 text="9/7/2026"  box=(819,742)-(885,742)-(885,765)-(819,765)
+    [41] score=0.986 text="12:35 PM"  box=(923,742)-(980,746)-(977,765)-(921,761)
+=== uv/AEUV_10.10.41.3_1024x768.bgr888
+
+  OCR Benchmark  (1 cycle)
+  Image          : uv/AEUV_10.10.41.3_1024x768.bgr888
+  Det model      : /home/tpsadmin/model/PP-OCRv6_tiny_det_rk3588.rknn
+  Rec model      : /home/tpsadmin/model/PP-OCRv6_tiny_rec_rk3588.rknn
+  Drop score     : 0.40
+  Det thresh     : 0.20
+  Box thresh     : 0.40
+  Unclip ratio   : 1.50
+  Max candidates : 3000
+--
+Image load       : 2.7 ms  (2359296 bytes)
+Loading models (not included in timing)...
+Models loaded.
+
+Running 1 cycle...
+
+  RESULTS
+--
+  Avg time   : 481.4 ms  (std 0.0)
+    Det      : 261.8 ms  (std 0.0)
+    Rec      : 203.0 ms  (std 0.0, 50 crops)
+    Other    : 16.5 ms  (sort, NMS, crop extraction)
+  Avg CPU    : 171.4%
+  Avg memory : 176.3 MB
+  Recognized text:
+    [ 0] score=0.811 text="花"  box=(0,0)-(77,0)-(77,58)-(0,58)
+    [ 1] score=0.496 text="金"  box=(85,8)-(134,8)-(134,41)-(85,41)
+    [ 2] score=0.474 text="G"  box=(177,8)-(207,8)-(207,35)-(177,35)
+    [ 3] score=0.806 text="STOP"  box=(252,5)-(286,5)-(286,40)-(252,40)
+    [ 4] score=0.998 text="Init"  box=(103,39)-(125,39)-(125,52)-(103,52)
+    [ 5] score=0.998 text="Start"  box=(177,40)-(205,40)-(205,52)-(177,52)
+    [ 6] score=0.975 text="Stop"  box=(255,38)-(282,38)-(282,55)-(255,55)
+    [ 7] score=0.998 text="Setup"  box=(331,38)-(363,38)-(363,54)-(331,54)
+    [ 8] score=0.973 text="Clear Alarm"  box=(879,37)-(941,37)-(941,54)-(879,54)
+    [ 9] score=0.999 text="Exit"  box=(970,39)-(993,39)-(993,53)-(970,53)
+    [10] score=0.987 text="Tape Type :"  box=(461,82)-(561,82)-(561,104)-(461,104)
+    [11] score=0.957 text="0-ADWILLD485"  box=(750,81)-(877,85)-(876,107)-(748,104)
+    [12] score=0.966 text="Cassette Type :"  box=(459,115)-(587,119)-(586,141)-(458,137)
+    [13] score=1.000 text="12"  box=(753,123)-(775,123)-(775,143)-(753,143)
+    [14] score=0.956 text="UV Dosage :"  box=(460,150)-(564,154)-(562,175)-(458,171)
+    [15] score=0.996 text="400"  box=(745,152)-(781,152)-(781,171)-(745,171)
+    [16] score=0.976 text="mJicm 2"  box=(870,154)-(943,154)-(943,171)-(870,171)
+    [17] score=0.958 text="UV Irradiation Time :"  box=(461,176)-(621,176)-(621,198)-(461,198)
+    [18] score=0.909 text="0"  box=(745,178)-(766,178)-(766,195)-(745,195)
+    [19] score=0.993 text="seconds"  box=(865,178)-(944,174)-(946,196)-(868,200)
+    [20] score=0.928 text="Uv Working Time :"  box=(459,200)-(613,203)-(612,226)-(458,222)
+    [21] score=0.999 text="20:16"  box=(742,200)-(800,200)-(800,224)-(742,224)
+    [22] score=1.000 text="hours"  box=(870,203)-(926,203)-(926,222)-(870,222)
+    [23] score=0.961 text="UV Irradiation Intensity :"  box=(461,227)-(651,227)-(651,248)-(461,248)
+    [24] score=0.999 text="0.0"  box=(742,227)-(779,227)-(779,246)-(742,246)
+    [25] score=0.959 text="mWicm 2"  box=(872,228)-(946,228)-(946,246)-(872,246)
+    [26] score=0.964 text="UV Lamps Status :"  box=(463,252)-(610,254)-(610,273)-(463,271)
+    [27] score=0.860 text="OK"  box=(747,249)-(779,252)-(776,274)-(744,271)
+    [28] score=0.904 text="Lot No :"  box=(461,290)-(531,292)-(530,314)-(460,312)
+    [29] score=0.997 text="UP19E005.1-"  box=(749,293)-(875,293)-(875,320)-(749,320)
+    [30] score=0.912 text="二"  box=(16,383)-(236,372)-(248,577)-(28,588)
+    [31] score=0.723 text="013/05/2.. Stat UViraiaion"  box=(428,551)-(603,552)-(603,568)-(428,567)
+    [32] score=0.712 text="13/05/25. LOAD complete."  box=(429,568)-(602,569)-(602,585)-(429,584)
+    [33] score=0.792 text="13/05/2.. UNLAD processing"  box=(429,585)-(614,587)-(613,602)-(429,600)
+    [34] score=0.581 text="130/5 NK MARKING Complee."  box=(430,603)-(644,603)-(644,618)-(430,618)
+    [35] score=0.711 text="1305/25 UNLOAD completd."  box=(423,614)-(619,616)-(618,638)-(422,637)
+    [36] score=0.652 text="13/05/5. LO0P proessng."  box=(429,636)-(602,639)-(602,654)-(429,651)
+    [37] score=0.652 text="Q13/05/25.. Procss cyle complete"  box=(429,653)-(627,655)-(627,671)-(429,669)
+    [38] score=0.782 text="13/05/5.. L00P failed."  box=(427,669)-(574,669)-(574,686)-(427,686)
+    [39] score=0.712 text="13/05/25 SAFETY STOP processing"  box=(429,687)-(646,689)-(646,704)-(429,702)
+    [40] score=0.640 text="13/0525 Nomal to ispressing"  box=(423,699)-(640,703)-(640,723)-(422,720)
+    [41] score=0.627 text="1305/25 afety Thead eminated"  box=(425,718)-(636,718)-(636,739)-(425,739)
+    [42] score=0.932 text="S afety Thread terminated."  box=(4,744)-(130,744)-(130,762)-(4,762)
+    [43] score=0.999 text="05/13/2025"  box=(821,742)-(898,742)-(898,765)-(821,765)
+    [44] score=0.985 text="13:16"  box=(922,744)-(962,744)-(962,763)-(922,763)
+=== uv/AEUV_10.10.41.4_1024x768.bgr888
+
+  OCR Benchmark  (1 cycle)
+  Image          : uv/AEUV_10.10.41.4_1024x768.bgr888
+  Det model      : /home/tpsadmin/model/PP-OCRv6_tiny_det_rk3588.rknn
+  Rec model      : /home/tpsadmin/model/PP-OCRv6_tiny_rec_rk3588.rknn
+  Drop score     : 0.40
+  Det thresh     : 0.20
+  Box thresh     : 0.40
+  Unclip ratio   : 1.50
+  Max candidates : 3000
+--
+Image load       : 3.7 ms  (2359296 bytes)
+Loading models (not included in timing)...
+Models loaded.
+
+Running 1 cycle...
+
+  RESULTS
+--
+  Avg time   : 489.4 ms  (std 0.0)
+    Det      : 228.9 ms  (std 0.0)
+    Rec      : 242.2 ms  (std 0.0, 59 crops)
+    Other    : 18.4 ms  (sort, NMS, crop extraction)
+  Avg CPU    : 184.3%
+  Avg memory : 176.1 MB
+  Recognized text:
+    [ 0] score=0.484 text="氏"  box=(2,0)-(79,3)-(71,61)-(0,55)
+    [ 1] score=0.999 text="STOP"  box=(254,8)-(282,8)-(282,32)-(254,32)
+    [ 2] score=0.784 text="→"  box=(891,10)-(918,10)-(918,36)-(891,36)
+    [ 3] score=0.911 text="Start"  box=(177,39)-(205,41)-(204,54)-(176,51)
+    [ 4] score=0.963 text="Stop"  box=(255,38)-(282,38)-(282,55)-(255,55)
+    [ 5] score=0.971 text="Setup"  box=(330,37)-(362,40)-(360,56)-(328,53)
+    [ 6] score=0.955 text="Init"  box=(105,40)-(122,40)-(122,51)-(105,51)
+    [ 7] score=0.980 text="Clear Alarm"  box=(804,37)-(864,37)-(864,54)-(804,54)
+    [ 8] score=0.910 text="Exit"  box=(896,38)-(919,40)-(917,55)-(894,52)
+    [ 9] score=0.978 text="Tape Type :"  box=(463,83)-(559,83)-(559,104)-(463,104)
+    [10] score=0.972 text="Z-dummy-Z"  box=(757,87)-(842,87)-(842,108)-(757,108)
+    [11] score=0.976 text="Cassette Type :"  box=(459,115)-(587,119)-(586,141)-(458,137)
+    [12] score=1.000 text="12"  box=(753,122)-(774,122)-(774,142)-(753,142)
+    [13] score=0.956 text="UV Dosage :"  box=(460,148)-(564,152)-(562,175)-(458,171)
+    [14] score=1.000 text="20"  box=(745,152)-(772,152)-(772,173)-(745,173)
+    [15] score=0.910 text="mJicm ²"  box=(873,154)-(939,152)-(939,171)-(873,173)
+    [16] score=0.986 text="UV Irradiation Time :"  box=(463,176)-(622,178)-(622,198)-(462,196)
+    [17] score=0.547 text="0"  box=(747,176)-(764,176)-(764,195)-(747,195)
+    [18] score=0.999 text="seconds"  box=(870,178)-(942,174)-(944,193)-(872,197)
+    [19] score=0.950 text="UV Working Time :"  box=(462,200)-(610,203)-(610,225)-(462,222)
+    [20] score=1.000 text="160:57"  box=(748,201)-(805,201)-(805,223)-(748,223)
+    [21] score=1.000 text="hours"  box=(873,204)-(924,204)-(924,223)-(873,223)
+    [22] score=0.944 text="UV Irradiation Intensity :"  box=(463,225)-(651,227)-(651,249)-(462,247)
+    [23] score=0.999 text="0.0"  box=(745,227)-(777,227)-(777,246)-(745,246)
+    [24] score=0.971 text="mWicm²"  box=(872,229)-(944,227)-(945,246)-(872,248)
+    [25] score=0.949 text="UV Lamps Status :"  box=(464,252)-(609,254)-(609,274)-(463,271)
+    [26] score=0.698 text="OK"  box=(747,251)-(781,251)-(781,272)-(747,272)
+    [27] score=0.943 text="LotNo :"  box=(462,291)-(530,291)-(530,313)-(462,313)
+    [28] score=0.993 text="DUMMY"  box=(749,293)-(834,293)-(834,322)-(749,322)
+    [29] score=0.671 text="二"  box=(14,358)-(250,368)-(239,586)-(3,575)
+    [30] score=0.970 text="Cured Wafers :"  box=(464,381)-(580,383)-(580,403)-(463,401)
+    [31] score=0.999 text="540395"  box=(750,381)-(794,384)-(793,403)-(749,401)
+    [32] score=0.943 text="UV Lamp Replaced :"  box=(459,409)-(625,411)-(625,434)-(459,432)
+    [33] score=1.000 text="5071"  box=(749,414)-(785,414)-(785,432)-(749,432)
+    [34] score=0.991 text="Ink Replaced :"  box=(463,442)-(576,444)-(576,464)-(462,462)
+    [35] score=0.917 text="732"  box=(750,442)-(777,442)-(777,465)-(750,465)
+    [36] score=0.976 text="Test Counter :"  box=(464,473)-(578,475)-(577,493)-(463,491)
+    [37] score=1.000 text="128007"  box=(752,474)-(793,474)-(793,491)-(752,491)
+    [38] score=0.553 text="1305251254:32 asete naly omplde"  box=(427,549)-(676,549)-(676,570)-(427,570)
+    [39] score=0.604 text="13/05/251254:32 LOAD competed"  box=(423,563)-(634,567)-(633,587)-(422,584)
+    [40] score=0.678 text="13/05/251254:32 UNLAD procesig"  box=(427,581)-(651,581)-(651,602)-(427,602)
+    [41] score=0.549 text="13705/2512540 N MARKING Cne"  box=(427,597)-(676,597)-(676,618)-(427,618)
+    [42] score=0.535 text="1305/2 125452ULA ompleded"  box=(423,614)-(653,618)-(652,639)-(422,635)
+    [43] score=0.711 text="1305/25125452 LP processn."  box=(427,634)-(638,634)-(638,654)-(427,654)
+    [44] score=0.487 text="0130525125453 Ross ycecompel"  box=(423,648)-(664,651)-(663,672)-(422,669)
+    [45] score=0.784 text="613/05/251254:53 L0 faile."  box=(425,667)-(610,667)-(610,688)-(425,688)
+    [46] score=0.582 text="013025125453 SAFETYSTProcesin."  box=(428,685)-(685,688)-(684,706)-(428,703)
+    [47] score=0.547 text="130525125453 Nomal o iocesin"  box=(423,699)-(676,701)-(676,723)-(422,722)
+    [48] score=0.530 text="13052512545 ael reademinaed"  box=(425,718)-(672,718)-(672,739)-(425,739)
+    [49] score=0.912 text="S afety Thread terminated."  box=(4,744)-(130,744)-(130,762)-(4,762)
+    [50] score=1.000 text="05/13/2025"  box=(821,742)-(898,742)-(898,765)-(821,765)
+    [51] score=0.995 text="13:13"  box=(922,744)-(962,744)-(962,763)-(922,763)
+=== uv/IncorrectImage_UVD002__20260524201655_1024x768.bgr888
+
+  OCR Benchmark  (1 cycle)
+  Image          : uv/IncorrectImage_UVD002__20260524201655_1024x768.bgr888
+  Det model      : /home/tpsadmin/model/PP-OCRv6_tiny_det_rk3588.rknn
+  Rec model      : /home/tpsadmin/model/PP-OCRv6_tiny_rec_rk3588.rknn
+  Drop score     : 0.40
+  Det thresh     : 0.20
+  Box thresh     : 0.40
+  Unclip ratio   : 1.50
+  Max candidates : 3000
+--
+Image load       : 2.3 ms  (2359296 bytes)
+Loading models (not included in timing)...
+Models loaded.
+
+Running 1 cycle...
+
+  RESULTS
+--
+  Avg time   : 429.9 ms  (std 0.0)
+    Det      : 249.7 ms  (std 0.0)
+    Rec      : 174.3 ms  (std 0.0, 48 crops)
+    Other    : 5.9 ms  (sort, NMS, crop extraction)
+  Avg CPU    : 170.9%
+  Avg memory : 177.6 MB
+  Recognized text:
+    [ 0] score=0.787 text="花"  box=(0,0)-(77,0)-(77,58)-(0,58)
+    [ 1] score=0.865 text="STOP"  box=(252,5)-(286,5)-(286,38)-(252,38)
+    [ 2] score=0.978 text="Init"  box=(105,40)-(122,40)-(122,51)-(105,51)
+    [ 3] score=0.999 text="Start"  box=(179,40)-(207,40)-(207,53)-(179,53)
+    [ 4] score=0.846 text="Stop"  box=(255,38)-(281,41)-(279,56)-(253,53)
+    [ 5] score=0.997 text="Setup"  box=(331,38)-(363,38)-(363,54)-(331,54)
+    [ 6] score=0.966 text="Clear Alarm"  box=(879,37)-(941,37)-(941,54)-(879,54)
+    [ 7] score=0.987 text="Exit"  box=(970,39)-(995,39)-(995,55)-(970,55)
+    [ 8] score=0.977 text="Tape Type :"  box=(463,83)-(559,83)-(559,104)-(463,104)
+    [ 9] score=0.987 text="N-600L676H"  box=(751,86)-(850,86)-(850,107)-(751,107)
+    [10] score=0.958 text="Cassette Type :"  box=(459,115)-(587,119)-(586,141)-(458,137)
+    [11] score=0.994 text="8"  box=(755,126)-(764,126)-(764,139)-(755,139)
+    [12] score=0.953 text="UV Dosage :"  box=(460,150)-(564,154)-(562,175)-(458,171)
+    [13] score=0.997 text="600"  box=(745,152)-(781,152)-(781,173)-(745,173)
+    [14] score=0.921 text="mJ/cm ²"  box=(865,153)-(939,148)-(942,171)-(868,175)
+    [15] score=0.971 text="UV Irradiation Time :"  box=(461,176)-(621,176)-(621,198)-(461,198)
+    [16] score=1.000 text="71"  box=(745,174)-(772,174)-(772,198)-(745,198)
+    [17] score=0.999 text="seconds"  box=(868,176)-(945,176)-(945,198)-(868,198)
+    [18] score=0.969 text="UV Working Time :"  box=(459,200)-(613,203)-(612,224)-(458,221)
+    [19] score=1.000 text="42:43"  box=(745,202)-(798,202)-(798,221)-(745,221)
+    [20] score=1.000 text="hours"  box=(870,203)-(926,203)-(926,222)-(870,222)
+    [21] score=0.969 text="UV Irradiation Intensity :"  box=(461,227)-(651,227)-(651,248)-(461,248)
+    [22] score=1.000 text="8.5"  box=(745,227)-(779,227)-(779,246)-(745,246)
+    [23] score=0.930 text="mWicm ²"  box=(873,229)-(944,227)-(945,246)-(873,248)
+    [24] score=0.956 text="UV Lamps Status :"  box=(463,252)-(610,254)-(610,273)-(463,271)
+    [25] score=0.825 text="OK"  box=(748,252)-(779,252)-(779,274)-(748,274)
+    [26] score=0.970 text="LotNo :"  box=(461,290)-(530,292)-(529,314)-(461,312)
+    [27] score=0.963 text="UQ21B263.1X"  box=(749,293)-(887,293)-(887,320)-(749,320)
+    [28] score=0.451 text="24/0526. Wainfor Wirainto tat"  box=(429,551)-(671,552)-(671,567)-(429,567)
+    [29] score=0.785 text="24/05/6. StartUViraiation"  box=(429,567)-(604,568)-(604,584)-(429,583)
+    [30] score=0.854 text="24/05/26. LOAD completed."  box=(429,585)-(599,586)-(599,601)-(429,600)
+    [31] score=0.799 text="024/05/26.. UNLOAD procssin."  box=(427,598)-(617,598)-(617,621)-(427,621)
+    [32] score=0.689 text="24/0526 INK MARKING Complete."  box=(427,616)-(644,616)-(644,638)-(427,638)
+    [33] score=0.700 text="024/05/26. UNLOAD completed."  box=(429,637)-(616,638)-(616,653)-(429,652)
+    [34] score=0.735 text="024/05/26.. Lo0P processig."  box=(430,653)-(602,655)-(601,670)-(430,669)
+    [35] score=0.696 text="24/05/26.. rocess ycle omplete"  box=(425,664)-(630,667)-(629,690)-(424,686)
+    [36] score=0.860 text="024/05/26. L00P failed."  box=(429,686)-(572,686)-(572,704)-(429,704)
+    [37] score=0.758 text="24/0/26.. AFETY STOP processin."  box=(425,699)-(647,701)-(646,723)-(424,722)
+    [38] score=0.558 text="24/056 Namal opisprcesin"  box=(425,717)-(638,720)-(637,741)-(424,737)
+    [39] score=0.970 text="Normal Stop is processing"  box=(4,744)-(132,744)-(132,762)-(4,762)
+    [40] score=1.000 text="5/24/2026"  box=(823,744)-(887,744)-(887,762)-(823,762)
+    [41] score=0.883 text="8.18 PM"  box=(924,744)-(971,744)-(971,763)-(924,763)
+=== uv/IncorrectImage_UVD002__20260622014820_1024x768.bgr888
+
+  OCR Benchmark  (1 cycle)
+  Image          : uv/IncorrectImage_UVD002__20260622014820_1024x768.bgr888
+  Det model      : /home/tpsadmin/model/PP-OCRv6_tiny_det_rk3588.rknn
+  Rec model      : /home/tpsadmin/model/PP-OCRv6_tiny_rec_rk3588.rknn
+  Drop score     : 0.40
+  Det thresh     : 0.20
+  Box thresh     : 0.40
+  Unclip ratio   : 1.50
+  Max candidates : 3000
+--
+Image load       : 2.6 ms  (2359296 bytes)
+Loading models (not included in timing)...
+Models loaded.
+
+Running 1 cycle...
+
+  RESULTS
+--
+  Avg time   : 444.0 ms  (std 0.0)
+    Det      : 243.8 ms  (std 0.0)
+    Rec      : 188.1 ms  (std 0.0, 51 crops)
+    Other    : 12.0 ms  (sort, NMS, crop extraction)
+  Avg CPU    : 180.3%
+  Avg memory : 176.3 MB
+  Recognized text:
+    [ 0] score=0.581 text="花"  box=(1,1)-(77,1)-(77,58)-(1,58)
+    [ 1] score=0.879 text="STOP"  box=(252,5)-(286,5)-(286,37)-(252,37)
+    [ 2] score=0.467 text="→"  box=(967,8)-(991,8)-(991,36)-(967,36)
+    [ 3] score=0.968 text="Init"  box=(105,41)-(122,41)-(122,51)-(105,51)
+    [ 4] score=0.999 text="Start"  box=(179,40)-(205,40)-(205,53)-(179,53)
+    [ 5] score=0.829 text="5top"  box=(255,38)-(281,41)-(279,56)-(253,53)
+    [ 6] score=0.996 text="Setup"  box=(331,38)-(363,38)-(363,54)-(331,54)
+    [ 7] score=0.967 text="Clear Alarm"  box=(879,37)-(941,37)-(941,54)-(879,54)
+    [ 8] score=0.975 text="Exit"  box=(970,39)-(994,39)-(994,53)-(970,53)
+    [ 9] score=0.933 text="Tape Type :"  box=(463,83)-(559,83)-(559,104)-(463,104)
+    [10] score=0.982 text="N-600L676H"  box=(751,86)-(850,86)-(850,107)-(751,107)
+    [11] score=0.968 text="Cassette Type :"  box=(459,115)-(587,119)-(586,141)-(458,137)
+    [12] score=0.922 text="8"  box=(754,126)-(763,126)-(763,137)-(754,137)
+    [13] score=0.915 text="UV Dosage :"  box=(457,150)-(564,154)-(562,175)-(456,171)
+    [14] score=0.997 text="600"  box=(745,152)-(783,152)-(783,173)-(745,173)
+    [15] score=0.918 text="mJ/cm ²"  box=(867,153)-(939,148)-(942,171)-(870,175)
+    [16] score=0.963 text="UV Irradiation Time :"  box=(461,176)-(621,176)-(621,198)-(461,198)
+    [17] score=1.000 text="45"  box=(745,176)-(774,176)-(774,197)-(745,197)
+    [18] score=0.995 text="seconds"  box=(865,178)-(944,174)-(946,196)-(868,200)
+    [19] score=0.940 text="UV Working Time :"  box=(462,201)-(611,203)-(611,225)-(461,223)
+    [20] score=1.000 text="221:09"  box=(742,196)-(809,201)-(807,225)-(739,220)
+    [21] score=1.000 text="hours"  box=(870,203)-(926,203)-(926,222)-(870,222)
+    [22] score=0.972 text="UV Irradiation Intensity :"  box=(461,227)-(651,227)-(651,248)-(461,248)
+    [23] score=0.999 text="13.4"  box=(746,222)-(791,226)-(786,251)-(741,247)
+    [24] score=0.955 text="mWicm²"  box=(872,229)-(944,227)-(945,246)-(872,248)
+    [25] score=0.958 text="UV Lamps Status :"  box=(463,252)-(610,254)-(610,273)-(463,271)
+    [26] score=0.740 text="OK"  box=(747,251)-(781,251)-(781,272)-(747,272)
+    [27] score=0.933 text="Lot No :"  box=(461,290)-(530,290)-(530,312)-(461,312)
+    [28] score=0.945 text="uQ25E035.1."  box=(748,291)-(875,295)-(874,324)-(746,320)
+    [29] score=0.766 text="22/06/2.. Stat UViradiaion"  box=(428,551)-(603,552)-(603,568)-(428,567)
+    [30] score=0.757 text="022/06/6. LOAD complete."  box=(430,586)-(601,586)-(601,601)-(430,601)
+    [31] score=0.783 text="022/06/26.. UNLOAD procssin."  box=(427,598)-(617,598)-(617,621)-(427,621)
+    [32] score=0.647 text="220626 INK MARKING Complete."  box=(427,616)-(644,616)-(644,638)-(427,638)
+    [33] score=0.740 text="22/06/6. UNLOAD completed."  box=(430,636)-(616,638)-(616,653)-(430,651)
+    [34] score=0.730 text="022/06/26. Lo0P processig."  box=(430,653)-(602,655)-(601,670)-(430,669)
+    [35] score=0.642 text="2206/26 Procss yle omplete"  box=(424,662)-(632,669)-(630,696)-(422,689)
+    [36] score=0.848 text="022/06/26. L00P failed."  box=(429,686)-(572,686)-(572,704)-(429,704)
+    [37] score=0.675 text="02206/26 SAFETYSTP rcessng"  box=(423,699)-(649,703)-(648,725)-(422,721)
+    [38] score=0.568 text="22/0626. Namal so ispocein"  box=(423,717)-(640,720)-(640,741)-(422,737)
+    [39] score=0.949 text="Normal Stop is processing"  box=(0,741)-(135,744)-(134,765)-(0,761)
+    [40] score=0.998 text="6/22/2026"  box=(821,742)-(892,742)-(892,765)-(821,765)
+    [41] score=0.927 text="1:50 AM"  box=(921,742)-(972,746)-(969,764)-(919,759)
+=== uv/IncorrectImage_UVD002__20260622014823_1024x768.bgr888
+
+  OCR Benchmark  (1 cycle)
+  Image          : uv/IncorrectImage_UVD002__20260622014823_1024x768.bgr888
+  Det model      : /home/tpsadmin/model/PP-OCRv6_tiny_det_rk3588.rknn
+  Rec model      : /home/tpsadmin/model/PP-OCRv6_tiny_rec_rk3588.rknn
+  Drop score     : 0.40
+  Det thresh     : 0.20
+  Box thresh     : 0.40
+  Unclip ratio   : 1.50
+  Max candidates : 3000
+--
+Image load       : 2.6 ms  (2359296 bytes)
+Loading models (not included in timing)...
+Models loaded.
+
+Running 1 cycle...
+
+  RESULTS
+--
+  Avg time   : 519.3 ms  (std 0.0)
+    Det      : 264.7 ms  (std 0.0)
+    Rec      : 236.3 ms  (std 0.0, 50 crops)
+    Other    : 18.2 ms  (sort, NMS, crop extraction)
+  Avg CPU    : 189.1%
+  Avg memory : 177.4 MB
+  Recognized text:
+    [ 0] score=0.781 text="花"  box=(0,0)-(77,0)-(77,58)-(0,58)
+    [ 1] score=0.911 text="STOP"  box=(252,5)-(286,5)-(286,38)-(252,38)
+    [ 2] score=0.534 text="→"  box=(967,10)-(991,10)-(991,35)-(967,35)
+    [ 3] score=0.875 text="Inil"  box=(105,41)-(121,41)-(121,51)-(105,51)
+    [ 4] score=0.999 text="Start"  box=(179,40)-(205,40)-(205,53)-(179,53)
+    [ 5] score=0.944 text="Stop"  box=(255,38)-(282,38)-(282,55)-(255,55)
+    [ 6] score=0.997 text="Setup"  box=(331,38)-(363,38)-(363,54)-(331,54)
+    [ 7] score=0.995 text="Clear Alarm"  box=(877,37)-(941,37)-(941,54)-(877,54)
+    [ 8] score=0.992 text="Exit"  box=(970,38)-(995,40)-(993,55)-(968,52)
+    [ 9] score=0.970 text="Tape Type :"  box=(463,83)-(559,83)-(559,104)-(463,104)
+    [10] score=0.987 text="N-600L676H"  box=(751,86)-(850,86)-(850,107)-(751,107)
+    [11] score=0.965 text="Cassette Type :"  box=(459,115)-(587,119)-(586,141)-(458,137)
+    [12] score=0.998 text="8"  box=(753,125)-(765,125)-(765,138)-(753,138)
+    [13] score=0.952 text="UV Dosage :"  box=(460,150)-(564,154)-(562,175)-(458,171)
+    [14] score=0.994 text="600"  box=(745,152)-(783,152)-(783,171)-(745,171)
+    [15] score=0.908 text="mJicm ²"  box=(873,154)-(939,152)-(939,171)-(873,173)
+    [16] score=0.985 text="UV Irradiation Time :"  box=(463,175)-(623,178)-(623,199)-(462,196)
+    [17] score=0.901 text="0"  box=(745,179)-(766,179)-(766,195)-(745,195)
+    [18] score=0.997 text="seconds"  box=(873,179)-(944,179)-(944,198)-(873,198)
+    [19] score=0.967 text="UV Working Time :"  box=(459,198)-(610,202)-(610,224)-(458,221)
+    [20] score=1.000 text="221:09"  box=(742,200)-(809,200)-(809,224)-(742,224)
+    [21] score=1.000 text="hours"  box=(873,203)-(926,203)-(926,222)-(873,222)
+    [22] score=0.976 text="UV Irradiation Intensity :"  box=(461,227)-(651,227)-(651,248)-(461,248)
+    [23] score=0.999 text="0.0"  box=(745,227)-(777,227)-(777,246)-(745,246)
+    [24] score=0.929 text="mWicm ²"  box=(873,229)-(944,227)-(945,246)-(873,248)
+    [25] score=0.980 text="UV Lamps Status :"  box=(459,249)-(613,253)-(612,275)-(458,272)
+    [26] score=0.749 text="OK"  box=(748,251)-(779,251)-(779,273)-(748,273)
+    [27] score=0.909 text="Lot No :"  box=(462,290)-(531,292)-(530,314)-(461,312)
+    [28] score=0.925 text="UQ25E035.1."  box=(748,291)-(877,295)-(876,324)-(746,320)
+    [29] score=0.741 text="22/06/2. LOAD completd."  box=(429,568)-(603,568)-(603,585)-(429,585)
+    [30] score=0.788 text="22/06/26.. UNLAD processing"  box=(429,585)-(614,587)-(613,603)-(429,601)
+    [31] score=0.731 text="220626.. INK MRKING Comoleted"  box=(427,598)-(642,598)-(642,619)-(427,619)
+    [32] score=0.703 text="2206/26 UNLOAD complete."  box=(425,614)-(619,616)-(618,638)-(424,637)
+    [33] score=0.645 text="22/06/2. LO0p processng."  box=(429,636)-(604,639)-(603,654)-(429,651)
+    [34] score=0.700 text="22/06/26.. Process ylecomplete"  box=(429,653)-(628,655)-(628,671)-(429,669)
+    [35] score=0.853 text="022/06/26. L00P ailed."  box=(429,669)-(574,669)-(574,686)-(429,686)
+    [36] score=0.710 text="220626. SAFETY STOP rocesing"  box=(427,685)-(644,685)-(644,706)-(427,706)
+    [37] score=0.529 text="22026 Namal tp ispocessing"  box=(425,699)-(640,703)-(640,725)-(424,721)
+    [38] score=0.587 text="220626. aely Thead erminaled"  box=(425,718)-(638,718)-(638,739)-(425,739)
+    [39] score=0.957 text="S afety Thread terminated."  box=(4,744)-(130,744)-(130,762)-(4,762)
+    [40] score=1.000 text="6/22/2026"  box=(823,744)-(887,744)-(887,762)-(823,762)
+    [41] score=0.949 text="1:50 AM"  box=(924,744)-(971,744)-(971,763)-(924,763)
