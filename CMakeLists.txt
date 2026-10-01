@@ -19,8 +19,7 @@ include_directories(
 )
 link_directories(${OPENCV_LIB_DIR} ${CLIPPER_LIB_DIR} ${ZLIB_LIB_DIR})
 
-# ocr_core: the OCR logic (detector, recognizer, and
-# shared helpers) as a static library, not a runnable program.
+# ocr_core: the OCR logic (detector, recognizer and shared helpers) as a static library, not a runnable program.
 # The production library (ocr/tps_ppocr.cpp, libTPSLibPPOcr.so) and its board check (ocr/ppocr_check.cpp) are built by recc_build.
 add_library(ocr_core STATIC
     ocr/rknn_executor.cpp

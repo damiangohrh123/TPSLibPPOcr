@@ -144,7 +144,7 @@ The detector's own thresholds (`det_thresh`, `box_thresh`, `unclip_ratio`, `max_
 ./ppocr_check ./libTPSLibPPOcr.so /home/tpsadmin/model alarm_1024x768.bgr888 crop_regions_alarm.tsv
 ```
 
-On the alarm regions it should read 24 of 31 exactly, the same texts as the `pad` rows of `test/crop_eval_m8.txt`.
+On the alarm regions it reads 24 of 31 exactly, with the same text for every region as the `pad` rows of `test/crop_eval_m8.txt`.
 
 ## Environment
 

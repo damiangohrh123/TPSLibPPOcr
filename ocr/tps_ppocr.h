@@ -4,6 +4,7 @@
 // TPSLibPPOcr: PP-OCR text reading on the RK3588 NPU, as a flat C interface (see README.md, "Production Use").
 // Frames are raw BGR888 rows. A handle may be shared by threads; its calls run one at a time.
 // Each result belongs to the caller until tps_ppocr_free. No function throws or exits; failures return a TPS_PPOCR_ERR_* code.
+// The loading program must link libpthread, as app and appui do: on glibc before 2.34, C++ threads fail if it arrives only with this library.
 
 #define TPS_PPOCR_API __attribute__((visibility("default")))
 
