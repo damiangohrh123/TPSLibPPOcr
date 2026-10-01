@@ -21,12 +21,14 @@ link_directories(${OPENCV_LIB_DIR} ${CLIPPER_LIB_DIR} ${ZLIB_LIB_DIR})
 
 # ocr_core: the OCR logic (detector, recognizer, and
 # shared helpers) as a static library, not a runnable program.
+# The production library (ocr/tps_ppocr.cpp, libTPSLibPPOcr.so) and its board check (ocr/ppocr_check.cpp) are built by recc_build.
 add_library(ocr_core STATIC
     ocr/rknn_executor.cpp
     ocr/preprocess.cpp
     ocr/ppocr_det.cpp
     ocr/ppocr_rec.cpp
     ocr/ppocr_system.cpp
+    ocr/ppocr_crop.cpp
 )
 
 target_include_directories(ocr_core PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})

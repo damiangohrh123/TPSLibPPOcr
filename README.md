@@ -17,7 +17,14 @@ Those figures come from the `test/*.bgr888` screens, which are screenshots of ma
 
 ## Production Use
 
-In production, OCR is meant to ship as `libTPSLibPPOcr.so` with a flat C ABI. This repo does not build that library yet; `benchmark` is the current way to run the pipeline on an image.
+In production, OCR ships as `libTPSLibPPOcr.so`, which `recc_build` builds from this repo. Its flat C interface is `ocr/tps_ppocr.h`:
+
+- `tps_ppocr_create` loads the models from a folder, and `tps_ppocr_destroy` releases them.
+- `tps_ppocr_read_frame` reads a whole frame.
+- `tps_ppocr_read_region` reads one region drawn on a frame, as a Screen Capture region is drawn. It widens the region by 8 pixels, pads it at native scale to the detector's input, and keeps only text whose box centre is inside the region. This is `crop_eval`'s `pad` mode, which read 24 of the 31 test regions exactly.
+- Both reads return the text, with pieces on one line joined by spaces and lines by line breaks, a confidence from 0 to 100, and each piece with its score and box. `tps_ppocr_free` frees the result.
+
+The library exports only these functions. OpenCV and Clipper are built into it, so on the board it needs only `librknnrt.so`.
 
 ## Directory Structure
 
@@ -26,7 +33,11 @@ tpslibppocr/
   ocr/                             # the OCR pipeline
     benchmark.cpp                  # CLI: one .bgr888 image in, OCR text and timing out
     crop_eval.cpp                  # CLI: compares ways of reading drawn regions (see Usage below)
-    raw_image.h                    # loads a raw .bgr888 file, shared by both tools
+    ppocr_check.cpp                # CLI: checks libTPSLibPPOcr.so on a board (see Usage below)
+    raw_image.h                    # loads a raw .bgr888 file, shared by the tools
+    regions.h                      # reads a regions file, shared by crop_eval and ppocr_check
+    tps_ppocr.cpp/h                # the production library's C interface (see Production Use)
+    ppocr_crop.cpp/h               # reads a drawn region and joins pieces into lines
     ppocr_det.cpp/h                # detection
     ppocr_rec.cpp/h                # recognition
     ppocr_system.cpp/h             # det + rec pipeline, NMS
@@ -124,6 +135,16 @@ The detector's own thresholds (`det_thresh`, `box_thresh`, `unclip_ratio`, `max_
 ```bash
 ./crop_eval /home/tpsadmin/model/PP-OCRv6_tiny_det_rk3588.rknn /home/tpsadmin/model/PP-OCRv6_tiny_rec_rk3588.rknn /home/tpsadmin/model/ppocr_keys_v6.txt alarm_1024x768.bgr888 crop_regions_alarm.tsv [cycles=5] [margin=0]
 ```
+
+### `ppocr_check` (Library Check)
+
+`ppocr_check` checks `libTPSLibPPOcr.so` on a board. It loads the library with `dlopen`, as the controller will, reads a whole screen, then reads each region in a regions file and compares it with its expected text. `recc_build` builds both files into its `build/tps/`. Copy them to `~/test` on the board, then:
+
+```bash
+./ppocr_check ./libTPSLibPPOcr.so /home/tpsadmin/model alarm_1024x768.bgr888 crop_regions_alarm.tsv
+```
+
+On the alarm regions it should read 24 of 31 exactly, the same texts as the `pad` rows of `test/crop_eval_m8.txt`.
 
 ## Environment
 
