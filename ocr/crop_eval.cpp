@@ -16,28 +16,8 @@
 
 namespace {
 
-size_t edit_distance(const std::u32string& a, const std::u32string& b) {
-    std::vector<size_t> row(b.size() + 1);
-    for (size_t j = 0; j <= b.size(); ++j) row[j] = j;
-    for (size_t i = 1; i <= a.size(); ++i) {
-        size_t diag = row[0];
-        row[0] = i;
-        for (size_t j = 1; j <= b.size(); ++j) {
-            size_t up = row[j];
-            row[j] = std::min({row[j] + 1, row[j - 1] + 1, diag + (a[i - 1] != b[j - 1] ? 1 : 0)});
-            diag = up;
-        }
-    }
-    return row[b.size()];
-}
-
 enum Mode { kRec, kStretch, kPad, kModes };
 const char* const kModeNames[kModes] = {"rec", "stretch", "pad"};
-
-struct Tally {
-    int n = 0, matched = 0;
-    double cer = 0.0, ms = 0.0;
-};
 
 }  // namespace
 

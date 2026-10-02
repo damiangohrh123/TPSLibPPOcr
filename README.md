@@ -34,8 +34,9 @@ tpslibppocr/
     benchmark.cpp                  # CLI: one .bgr888 image in, OCR text and timing out
     crop_eval.cpp                  # CLI: compares ways of reading drawn regions (see Usage below)
     ppocr_check.cpp                # CLI: checks libTPSLibPPOcr.so on a board (see Usage below)
+    ocr_compare.cpp                # CLI: PP-OCR against the controller's Tesseract on drawn regions (see Usage below)
     raw_image.h                    # loads a raw .bgr888 file, shared by the tools
-    regions.h                      # reads a regions file, shared by crop_eval and ppocr_check
+    regions.h                      # reads a regions file and scores reads, shared by the tools
     tps_ppocr.cpp/h                # the production library's C interface (see Production Use)
     ppocr_crop.cpp/h               # reads a drawn region and joins pieces into lines
     ppocr_det.cpp/h                # detection
@@ -145,6 +146,16 @@ The detector's own thresholds (`det_thresh`, `box_thresh`, `unclip_ratio`, `max_
 ```
 
 On the alarm regions it reads 24 of 31 exactly, with the same text for every region as the `pad` rows of `test/crop_eval_m8.txt`.
+
+### `ocr_compare` (PP-OCR Against Tesseract)
+
+`ocr_compare` reads drawn regions with both engines through the controller's own code: PP-OCR through this library, and Tesseract through the controller's `TPSLibImageProcessor` filters and `TPSLibOCR`, in four settings. Each screen is first encoded as the JPEG the Gen5 receiver hands to OCR. PP-OCR is also read from the raw frame. It prints each read, its time and whether it matched, then totals by engine, screen and region category. It needs the controller's libraries, so only `recc_build` builds it. Tesseract's library runs only after the controller's licence check, so run it as root on a board with a licence:
+
+```bash
+sudo env HOME=/home/tpsadmin LD_LIBRARY_PATH=$HOME/recc_new:/usr/lib/boost:/usr/lib/tps ./ocr_compare ~/ppocr ~/tessdata ~/licence/config.lic 3 screen_1024x768.bgr888 regions.tsv [more screen and regions pairs]
+```
+
+On 181 regions of 8 machine screens (2026-10-02), PP-OCR read 144 exactly, against 87 for Tesseract with default settings and 99 with its best setting. The test screens are not in this repository.
 
 ## Environment
 
