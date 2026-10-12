@@ -15,6 +15,86 @@ Preprocessing was tested on both stages and dropped. Binarization and upscaling 
 
 Those figures come from the `test/*.bgr888` screens, which are screenshots of machine displays supplied for testing rather than frames captured from a machine over HDMI. They are the right input for comparing options against each other, since every option sees identical pixels, but the absolute numbers are not production-path figures: a real HDMI capture goes through the machine's video output and the board's HDMI receiver first. Nothing has yet been measured on a real HDMI capture of a real machine.
 
+## Recognition Model Tier
+
+`model/` ships PP-OCRv6 **tiny** for both stages. The **small** recognition tier reads more
+accurately at the same speed once its classifier is pruned, measured on 12 October 2026. It is
+not adopted here yet. See `documentation/OCR_Rec_Model_Comparison.docx`.
+
+| | tiny | small, pruned |
+|---|---|---|
+| 181 labelled regions | 148 | 161 |
+| 31 drawn regions, `crop_eval` pad at margin 8 | 24 | 29 |
+| The same through `libTPSLibPPOcr.so`, `ppocr_check` | 24 | 29 |
+| Recognition, 113 crops | 366 ms | 363 ms |
+| CPU | 180% | 116% |
+
+Small as published is 3.6x slower. Its classifier covers 49 languages in 18710 output classes,
+which RKNN will not place on the NPU:
+
+```
+E RKNN: channel is too large, may produce thousands of regtask, fallback to cpu!
+```
+
+Five layers then run on the host CPU, one of them a transpose moving 1.4 MB per crop. These
+screens are English and numbers only, so the classifier is cut to the 106 characters that can
+appear. Softmax renormalises over what remains, which is identical to masking the removed
+logits, and the pruned model matched the original on 40 of 40 timesteps. Every compute layer
+then schedules on the NPU, weight memory falls from 10782 KB to 6059 KB, and per-crop internal
+memory from 7321 KB to 1620 KB.
+
+**Medium was tested and rejected**, on 12 October 2026. Pruned the same way, PP-OCRv6 medium
+ties small at 161 of 181 with worse character error, 0.056 against 0.046. It gains 5 regions on
+numeric values and gives all five back on labels, multi-line and long text, for five times the
+model size. All three tiers fail the same six log-line regions, which is good evidence those
+errors come from squeezing a long line into the 320 px input rather than from model capacity.
+The medium files were not kept.
+
+Three things to know before repeating this:
+
+- **rknn-toolkit2 2.4.2a8 crashes converting this model**, in an optional attention-fusion
+  pass. Pass `disable_rules=['fuse_exmatmul_add_mul_exsoftmax13_exmatmul_to_sdpa']` to
+  `rknn.config()`. The toolkit names the rule in its own error output. It is a toolkit bug, not
+  an unsupported operator, and an earlier note claiming the PPLCNetV4 backbone cannot convert
+  was wrong.
+- **Each tier has its own character dictionary.** Small's holds 18708 entries against tiny's
+  6904, and it ships inside the export's `inference.yml` rather than as a text file.
+- **`libTPSLibPPOcr.so` loads fixed filenames.** Testing another model through it needs a
+  directory where `PP-OCRv6_tiny_rec_rk3588.rknn` and `ppocr_keys_v6.txt` are the new files.
+
+Scripts live in `documentation/ocr_compare/analysis/`:
+
+| script | what it does |
+|---|---|
+| `tier_compare.py` | scores any recognition ONNX over the 181 labelled regions |
+| `prune_rec_head.py` | cuts the classifier to the usable characters, writes the matching keys file |
+| `convert_rec_rknn.py` | ONNX to RKNN for RK3588, FP16, with the fusion workaround |
+| `check_rknn_vs_onnx.py` | confirms a converted model matches its ONNX source |
+| `sweep_drop_score.py` | sweeps the per-piece drop score; 0.4 is already optimal for both tiers |
+
+## Detection Parameters
+
+`det_thresh`, `box_thresh` and `max_candidates` had been hardcoded since the first commit with
+no record of being tested against alternatives. A sweep of 27 combinations, scored over the 181
+labelled regions on 12 October 2026, settled all four:
+
+| parameter | value | finding |
+|---|---|---|
+| `det_thresh` | 0.20 | 0.15 is slightly worse; 0.30 flattens the table and cancels the unclip effect |
+| `box_thresh` | 0.40 | no effect anywhere between 0.30 and 0.50 |
+| `unclip_ratio` | **1.8**, was 1.5 | 160 of 181 against 159; 2.0 drops to 158 |
+| `max_candidates` | 3000 | a cap these screens never approach |
+
+`unclip_ratio` expands every detected box outward by `area * ratio / perimeter` pixels, undoing
+the shrink DBNet is trained to predict so that neighbouring lines stay separate. At 1.5 the box
+bottom clips an underscore sitting below the baseline, so `Z1_Point` reads as `Z1 Point`. At 1.8
+a 189x30 box gains about 4 px on each side and recovers it. Weighted character error over the
+181 regions falls from 0.0458 to 0.0439, with 4 screens better, 1 worse and 3 unchanged.
+
+This is a peak rather than a plateau, and it was tuned on 8 screens from 4 machines, so re-check
+it if a machine with a very different font appears. `benchmark` and `crop_eval` both take all
+four as optional arguments, so repeating the sweep is cheap.
+
 ## Production Use
 
 In production, OCR ships as `libTPSLibPPOcr.so`, which `recc_build` builds from this repo. Its flat C interface is `ocr/tps_ppocr.h`:
@@ -43,7 +123,6 @@ tpslibppocr/
     ppocr_rec.cpp/h                # recognition
     ppocr_system.cpp/h             # det + rec pipeline, NMS
     rknn_executor.cpp/h            # low-level RKNN model runner
-    preprocess.cpp/h               # normalisation shared by both models
   test/                            # test screens, crop_eval regions and results, sweep_det_thresholds.sh (see Usage below)
   cmake/aarch64-toolchain.cmake    # cross-compile toolchain file (see Build below)
   third_party/                     # rknn_api.h only (librknnrt.so lives on the board)
@@ -113,7 +192,7 @@ New board:
 Existing board, after a rebuild: re-upload just the binary.
 
 ```bash
-pscp build/benchmark tpsadmin@192.168.1.101:/home/tpsadmin/test/
+pscp build/benchmark tpsadmin@10.10.100.1:/home/tpsadmin/test/
 ```
 
 ## Usage
@@ -165,5 +244,5 @@ On 181 regions of 8 machine screens (2026-10-02), PP-OCR read 144 exactly, again
 | librknnrt (board) | 2.4.2a2+ (tested: 2.4.2a2) |
 | OpenCV / Clipper / zlib (board) | statically linked, core+imgproc only (see `CMakeLists.txt`) |
 | Board | RK3588, Ubuntu 20.04 aarch64 |
-| Board IP (this dev board) | 192.168.1.101, user tpsadmin |
+| Board IP (this dev board) | 10.10.100.1, user tpsadmin |
 | Board deploy paths | `/home/tpsadmin/test` (benchmark and test images), `/home/tpsadmin/model` |
