@@ -21,7 +21,9 @@ struct tps_ppocr {
 namespace {
 
 // The tuned settings benchmark and crop_eval use, and Appendix E's 8 pixel margin.
-constexpr float kDetThresh = 0.2f, kBoxThresh = 0.4f, kUnclipRatio = 1.5f;
+// unclip_ratio came from a sweep over the 181 labelled regions on 12 October 2026;
+// det_thresh and box_thresh were confirmed optimal by the same sweep.
+constexpr float kDetThresh = 0.2f, kBoxThresh = 0.4f, kUnclipRatio = 1.8f;
 constexpr int kMaxCandidates = 3000;
 constexpr double kDropScore = 0.4, kMinHeight = 10.0, kMinWidth = 8.0;
 constexpr int kMargin = 8;

@@ -24,11 +24,16 @@ const char* const kModeNames[kModes] = {"rec", "stretch", "pad"};
 int main(int argc, char** argv) {
     if (argc < 6) {
         fprintf(stderr, "usage: %s <det_model.rknn> <rec_model.rknn> <char_dict.txt> <image_WxH.bgr888> "
-            "<regions.tsv> [cycles=5] [margin=0]\n", argv[0]);
+            "<regions.tsv> [cycles=5] [margin=0] [det_thresh=0.2] [box_thresh=0.4] [unclip_ratio=1.8] "
+            "[max_candidates=3000]\n", argv[0]);
         return 1;
     }
     const int cycles = argc > 6 ? std::atoi(argv[6]) : 5;
     const int margin = argc > 7 ? std::atoi(argv[7]) : 0;
+    const float det_thresh = argc > 8 ? static_cast<float>(std::atof(argv[8])) : 0.2f;
+    const float box_thresh = argc > 9 ? static_cast<float>(std::atof(argv[9])) : 0.4f;
+    const float unclip_ratio = argc > 10 ? static_cast<float>(std::atof(argv[10])) : 1.8f;
+    const int max_candidates = argc > 11 ? std::atoi(argv[11]) : 3000;
 
     cv::Mat img = load_image(argv[4]);
     if (img.empty()) return 1;
@@ -38,7 +43,7 @@ int main(int argc, char** argv) {
         return 1;
     }
 
-    TextDetector detector(argv[1], 0.2f, 0.4f, 1.5f, 3000);
+    TextDetector detector(argv[1], det_thresh, box_thresh, unclip_ratio, max_candidates);
     TextRecognizer recognizer(argv[2], argv[3]);
     TextRecognizer rec_only(argv[2], argv[3]);
     if (!detector.is_loaded() || !recognizer.is_loaded() || !rec_only.is_loaded()) {
@@ -47,8 +52,9 @@ int main(int argc, char** argv) {
     }
     TextSystem system(std::move(detector), std::move(recognizer), 0.4, 10.0, 8.0);
 
-    printf("image %s, %zu regions, %d timed cycles per mode, margin %d px\n\n",
-        argv[4], regions.size(), cycles, margin);
+    printf("image %s, %zu regions, %d timed cycles per mode, margin %d px, "
+        "det %.2f box %.2f unclip %.2f cand %d\n\n",
+        argv[4], regions.size(), cycles, margin, det_thresh, box_thresh, unclip_ratio, max_candidates);
     printf("id\tcategory\tmode\tms\tscore\tmatch\tcer\ttext\n");
     std::map<std::string, Tally> tallies;
     for (const auto& region : regions) {

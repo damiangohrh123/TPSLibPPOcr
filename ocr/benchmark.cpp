@@ -146,7 +146,7 @@ int main(int argc, char** argv) {
         fprintf(stderr,
                 "usage: %s <det_model.rknn> <rec_model.rknn> <char_dict.txt> <image_WxH.bgr888> "
                 "[cycles=1] [drop_score=0.4] [det_thresh=0.2] [box_thresh=0.4] "
-                "[unclip_ratio=1.5] [max_candidates=3000]\n",
+                "[unclip_ratio=1.8] [max_candidates=3000]\n",
                 argv[0]);
         return 1;
     }
@@ -160,7 +160,7 @@ int main(int argc, char** argv) {
     // det_thresh 0.2 beat 0.3 (82.5% vs 80.7% on 394 fields across 5 screens).
     const float det_thresh = argc > 7 ? std::atof(argv[7]) : 0.2f;
     const float box_thresh = argc > 8 ? std::atof(argv[8]) : 0.4f;
-    const float unclip_ratio = argc > 9 ? std::atof(argv[9]) : 1.5f;
+    const float unclip_ratio = argc > 9 ? std::atof(argv[9]) : 1.8f;
     const int max_candidates = argc > 10 ? std::atoi(argv[10]) : 3000;
 
     printf("\n  OCR Benchmark  (%d cycle%s)\n", cycles, cycles == 1 ? "" : "s");
