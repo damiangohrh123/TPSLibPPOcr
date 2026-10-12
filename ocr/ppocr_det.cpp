@@ -238,8 +238,6 @@ std::vector<Quad> filter_tag_det_res(const std::vector<Quad>& dt_boxes,
 TextDetector::TextDetector(const std::string& det_model_path,
 	float det_thresh, float box_thresh, float unclip_ratio, int max_candidates)
 	: model_(load_model(det_model_path, kNumCores)),
-	// scale=1: this model already has normalization baked into its weights
-	normalize_(1.0),
 	db_postprocess_(det_thresh, box_thresh, max_candidates, unclip_ratio) {
 	if (!model_) {
 		fprintf(stderr, "TextDetector: failed to load model %s\n", det_model_path.c_str());
@@ -252,7 +250,9 @@ std::vector<Quad> TextDetector::run(const cv::Mat& img, int core_slot) const {
 	int src_h = img.rows, src_w = img.cols;
 	// Resizes the image to the model's fixed input size, recording the scale ratios.
 	ResizeResult resized = resize_to_det_input(img, kDetH, kDetW);
-	cv::Mat normalized = normalize_(resized.image);
+	// Straight to float with no scaling: this model has normalization baked into its weights.
+	cv::Mat normalized;
+	resized.image.convertTo(normalized, CV_32FC3);
 	std::size_t n_floats = normalized.total() * static_cast<std::size_t>(normalized.channels());
 
 	// Runs the detection model straight off the normalized image's own buffer.

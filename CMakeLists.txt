@@ -23,7 +23,6 @@ link_directories(${OPENCV_LIB_DIR} ${CLIPPER_LIB_DIR} ${ZLIB_LIB_DIR})
 # The production library (ocr/tps_ppocr.cpp, libTPSLibPPOcr.so) and its board check (ocr/ppocr_check.cpp) are built by recc_build.
 add_library(ocr_core STATIC
     ocr/rknn_executor.cpp
-    ocr/preprocess.cpp
     ocr/ppocr_det.cpp
     ocr/ppocr_rec.cpp
     ocr/ppocr_system.cpp

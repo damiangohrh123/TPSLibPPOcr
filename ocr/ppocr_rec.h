@@ -4,7 +4,6 @@
 #include <vector>
 #include <opencv2/core.hpp>
 #include "rknn_executor.h"
-#include "preprocess.h"
 
 // C++ port of the Python reference implementation's ppocr_rec.py.
 
@@ -52,6 +51,5 @@ public:
 
 private:
     std::unique_ptr<RknnExecutor> model_;  // the loaded recognition model
-    NormalizeImage normalize_;              // scales pixel values before inference
     CtcLabelDecode ctc_decode_;             // turns the model's output into text
 };

@@ -58,8 +58,6 @@ RecResult CtcLabelDecode::decode(const float* preds, int seq_len, int num_classe
 TextRecognizer::TextRecognizer(const std::string& rec_model_path,
 	const std::string& character_dict_path)
 	: model_(load_model(rec_model_path, kNumCores)),
-	// Scales pixel values into [0,1].
-	normalize_(1.0 / 255.0),
 	ctc_decode_(character_dict_path) {
 	if (!model_) {
 		fprintf(stderr, "TextRecognizer: failed to load model %s\n", rec_model_path.c_str());
@@ -89,7 +87,8 @@ std::vector<RecResult> TextRecognizer::run(const std::vector<cv::Mat>& imgs) con
 		cv::Mat padded = cv::Mat::zeros(kRecH, kRecW, src.type());
 		scaled.copyTo(padded(cv::Rect(0, 0, resized_w, kRecH)));
 
-		cv::Mat normalized = normalize_(padded);
+		cv::Mat normalized;
+		padded.convertTo(normalized, CV_32FC3, 1.0 / 255.0);  // into [0,1]
 		std::size_t n_floats = normalized.total() * static_cast<std::size_t>(normalized.channels());
 
 		auto outputs = model_->run(normalized.ptr<float>(), n_floats, core_slot);
